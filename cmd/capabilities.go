@@ -180,6 +180,16 @@ var curatedCapabilities = map[string]curatedCommand{
 			"acts on snapshot dirs under the workspace root (default ~/trailboss, override with --root) whose name ends in a -<timestamp> stamp; never touches GitHub and runs no git",
 		},
 	},
+	"upstream": {
+		example: "trailboss upstream watch",
+		notes: []string{
+			"trailboss's primary feature: agentic ownership of our renamed forks' upstream relationships (herd, tau, roundup, trailboss itself)",
+			"subcommands: status (divergence vs upstream), merge <fork> (merge on a fresh branch, --dry-run to preview), watch (check all forks, merge, test, report — cron-friendly), init (add upstream remotes)",
+			"it NEVER pushes to main — it merges on fresh upstream-merge/<timestamp> branches, runs each fork's test suite, and reports; the human gives the final go",
+			"clean merge + green tests = ready for human approval; conflicts = detailed report of what needs human eyes",
+			"set TRAILBOSS_FORKS_DIR to the parent dir of local checkouts; state (last-merged SHA per fork) persists under ~/.trailboss/upstream-state/",
+		},
+	},
 }
 
 // buildCapabilities walks the root command tree and merges each command's

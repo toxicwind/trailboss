@@ -869,6 +869,79 @@
       "title": "selections --json",
       "type": "object"
     },
+    "upstream": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "The watch-cycle report upstream watch --json emits: per-fork merge results with branch, conflicts, and test outcomes.",
+      "properties": {
+        "at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "results": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "branch": {
+                "type": "string"
+              },
+              "clean": {
+                "type": "boolean"
+              },
+              "conflicts": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "fork": {
+                "type": "string"
+              },
+              "ready": {
+                "type": "boolean"
+              },
+              "report": {
+                "type": "string"
+              },
+              "test_output": {
+                "type": "string"
+              },
+              "tests_passed": {
+                "type": "boolean"
+              },
+              "upstream_commits": {
+                "type": "integer"
+              },
+              "upstream_new_sha": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "fork",
+              "upstream_new_sha",
+              "upstream_commits",
+              "branch",
+              "clean",
+              "tests_passed",
+              "ready",
+              "report"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "at",
+        "results",
+        "summary"
+      ],
+      "title": "upstream --json",
+      "type": "object"
+    },
     "workspace-manifest": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,

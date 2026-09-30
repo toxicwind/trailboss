@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/upstream"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -128,6 +129,9 @@ func TestSchemasMatchTheirStructs(t *testing.T) {
 		{"workspacesReport", reflect.TypeOf(workspacesReport{}), workspacesReportSchemaObj()},
 		{"workspaceInfo", reflect.TypeOf(workspaceInfo{}), workspaceInfoSchemaObj()},
 		{"workspaceManifest", reflect.TypeOf(workspaceManifest{}), workspaceManifestSchemaObj()},
+		{"upstreamStatus", reflect.TypeOf(upstream.Status{}), upstreamStatusSchemaObj()},
+		{"upstreamMergeResult", reflect.TypeOf(upstream.MergeResult{}), upstreamMergeResultSchemaObj()},
+		{"upstreamWatchResult", reflect.TypeOf(upstream.WatchResult{}), upstreamWatchResultSchemaObj()},
 		{"errorReport", reflect.TypeOf(errorReport{}), errorReportSchemaObj()},
 	}
 	for _, tc := range cases {
@@ -253,6 +257,15 @@ func TestSampleOutputValidatesAgainstSchema(t *testing.T) {
 		"workspace-manifest": workspaceManifest{
 			Version: workspaceManifestVersion, Purpose: "audit", Branch: "dev",
 			Stamp: "2026-08-05-101112.131", Owner: "acme", CreatedAt: time.Now().UTC(),
+		},
+		"upstream": upstream.WatchResult{
+			At: time.Now().UTC(),
+			Results: []upstream.MergeResult{{
+				Fork: "herd", UpstreamNewSHA: "abc123def456", UpstreamCommits: 3,
+				Branch: "upstream-merge/20260930-041500", Clean: true,
+				TestsPassed: true, Ready: true, Report: "merged clean",
+			}},
+			Summary: "herd: merged 3 upstream commits clean",
 		},
 		"error": errorReport{Version: errorReportVersion, Error: "verifying token: unauthorized", ExitCode: 2},
 	}
@@ -450,7 +463,7 @@ func TestEveryJSONEmittingCommandHasASchema(t *testing.T) {
 	surfaceKey := map[string]string{
 		"select": "select", "check": "check", "selections": "selections",
 		"doctor": "doctor", "mirror": "mirror-report", "apply": "apply-plan",
-		"scan": "scan", "guide": "capabilities", "workspaces": "workspaces",
+		"scan": "scan", "guide": "capabilities", "workspaces": "workspaces", "upstream": "upstream",
 	}
 	cat := buildSchemaCatalogue()
 	claimedBy := map[string]int{}

@@ -37,6 +37,40 @@ trailboss apply --branch bump-go --commit-message "Bump Go" --pr-title "Bump Go"
 > The repos you mirror, scan, and change are **provably the same herd** —
 > frozen in one tally book, so no filter can drift between phases.
 
+
+## 🐂 Upstream — the trailboss's primary job
+
+trailboss is the **agentic owner of upstream patch relationships**. It watches our renamed forks' upstreams, merges on fresh branches, runs test suites, and reports. It **never pushes to main** — it prepares, verifies, and reports. The human gives the final go.
+
+```sh
+# see how far behind each fork is
+trailboss upstream status
+
+# merge one fork's upstream onto a fresh branch (never main)
+trailboss upstream merge herd --dry-run   # preview first
+trailboss upstream merge herd             # do it
+
+# the full watch cycle: check all forks, merge, test, report (cron-friendly)
+trailboss upstream watch
+trailboss upstream watch --json           # machine-readable for agents
+
+# point local checkouts at their upstreams
+TRAILBOSS_FORKS_DIR=/home/toxic/forks trailboss upstream init
+```
+
+**Our forks:**
+
+| Fork | Upstream | Tests |
+|------|----------|-------|
+| `toxicwind/herd` | `mostlygeek/llama-swap` | `go test ./...` |
+| `toxicwind/tau` | `can1357/oh-my-pi` | `bun test` |
+| `toxicwind/roundup` | `vllm-project/guidellm` | `pytest` |
+| `toxicwind/trailboss` | `redscaresu/goldfinger` | `go test ./...` |
+
+**The promise:** upstream moves → trailboss rides out → fresh `upstream-merge/<timestamp>` branch → conflicts resolved against our patch inventory → tests green → fleet report. Clean + green = ready for your approval. Conflicts it can't resolve = detailed report for human eyes.
+
+State (last-merged SHA per fork) persists under `~/.trailboss/upstream-state/`.
+
 ## Why
 
 An agent doing herd work ("which repos still pin `golang:1.22`? patch this CVE
