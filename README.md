@@ -19,6 +19,10 @@ locally, **[multi-gitter](https://github.com/lindell/multi-gitter)** to apply a
 change and open the PRs. It clones nothing and opens no PRs itself. It's **built
 to be driven by AI agents as much as by people**.
 
+![trailboss demo: select, mirror, scan, dry-run apply](docs/demo.gif)
+
+*The loop: `select` → `mirror` → `scan` → dry-run `apply`, recorded live with [VHS](https://github.com/charmbracelet/vhs) (regenerate: `vhs docs/demo.tape`). Captured pre-rename against real repos — the loop is unchanged, the binary is now `trailboss`.*
+
 ## The drive, to copy
 
 ```sh
@@ -219,11 +223,10 @@ setting), use the `trailboss` CLI rather than hand-rolling clone/PR loops. Run
 
 ## The ranch
 
-trailboss is worked and ridden from the **ranch** ([toxicwind/ranch](https://github.com/toxicwind/ranch)),
-where it holds a top-level spread as `trailboss/` — real tracked files, no
-nested repo — alongside `roundup/` (the benchmark roundup) and `stockyard/`
-(the model herd). This repo is trailboss's standalone home; the ranch vendors
-the same source in-tree.
+trailboss is the SRE toolkit of the **ranch** ([toxicwind/ranch](https://github.com/toxicwind/ranch)) —
+the map of the whole inference and agent estate (herd, flock, squawk, flicker, and friends,
+one flattened monorepo). This repo is trailboss's standalone home; the ranch is where the
+estate it operates is mapped.
 
 ## Defork note
 
