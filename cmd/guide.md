@@ -179,6 +179,30 @@ WORKFLOW
      dry-run banner prints the resolved base per repo so you can audit routing
      before anything runs.
 
+DIRECT MODE (--mode=direct): push straight to each repo's default branch
+  PR mode is the default. --mode=direct is the narrow exception for your own
+  fleet: trailboss drives the git binary itself to commit and push straight to
+  each repo's default branch — no PRs, no multi-gitter.
+       trailboss apply --mode=direct --direct-owners myorg --sign local \
+         --dry-run -- sed -i 's|old|new|g' Dockerfile
+  --direct-owners is REQUIRED (comma-separated or repeatable, case-insensitive):
+  every repo's owner must be allow-listed or the WHOLE run refuses before
+  cloning anything. Discipline per repo: clone into --direct-workdir (default a
+  fresh temp dir), fetch, check out the lockfile's default branch, hard-reset
+  to the remote tip — reused checkouts are re-verified (a checkout whose origin
+  points elsewhere is refused, never clobbered) — then run your script, commit,
+  push. Fetch-first and never force-push: a non-fast-forward push is recorded
+  as a per-repo error, not retried. Up to 4 repos run at a time. --dry-run runs
+  the script and reports would-change / no-change per repo without committing
+  or pushing.
+  Signing: --sign github is REJECTED in direct mode (a direct push can't ride
+  GitHub's web-flow key); --sign local signs with your GPG key, --sign none is
+  the explicit unsigned opt-out. Auth rides a GIT_ASKPASS helper fed from the
+  environment — the token never appears in argv, never reaches the script's
+  environment, and is stripped from child processes.
+  The real-run rule applies unchanged: --dry-run=false --confirm plus explicit
+  human authorization for that specific change.
+
 SIGNING (--sign, REQUIRED — no default)
   Every apply must state how commits are signed. There is no default on purpose:
   commit provenance is too important to leave implicit for a fleet-wide change.
@@ -328,6 +352,23 @@ SAFETY — READ THIS
   - --sign is required on every run: pass it explicitly and state which trust
     model you used (local = your GPG key, github = GitHub's key, none = unsigned)
     when you present the dry-run or a real run.
+
+SERVE — web UI + JSON API (serve)
+  `trailboss serve` embeds a small dashboard over the same machinery: pick a
+  selection, run mirror / scan / apply as background jobs, and watch live logs
+  stream in the browser. No new dependencies — plain net/http and vanilla JS.
+       trailboss serve                    # http://127.0.0.1:25250
+       trailboss serve --addr 127.0.0.1:8080
+  The server binds localhost by default; the token comes only from
+  TRAILBOSS_PAT (never from a request body) and jobs keep it out of logs.
+  API: GET /api/selections (named registry + ./.selection + ~/trailboss
+  workspace entries), POST /api/select (freeze a new lockfile — re-running
+  refreshes it in place), POST /api/jobs (kinds mirror, scan, apply with mode
+  pr|direct), GET /api/jobs, GET /api/jobs/{id}, and GET /api/jobs/{id}/events
+  (server-sent events: a replay of the log so far, then live lines, then a
+  terminal status frame). Apply jobs honor the same --mode=direct owner
+  allow-list and signing rules as the CLI; scan jobs are read-only. Jobs are
+  in-memory and do not survive a server restart.
 
 EXIT CODES
   trailboss's exit status is a stable contract you can branch on in scripts:

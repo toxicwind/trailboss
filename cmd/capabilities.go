@@ -108,11 +108,13 @@ var curatedCapabilities = map[string]curatedCommand{
 	},
 	"apply": {
 		requiredFlags: []string{"--branch", "--commit-message", "--pr-title", "--sign"},
-		enumValues:    map[string][]string{"--sign": validSignModes},
+		enumValues:    map[string][]string{"--sign": validSignModes, "--mode": {"pr", "direct"}},
 		example:       `trailboss apply --branch bump-dep --commit-message "bump dep" --pr-title "Bump dep" --sign local -- sed -i 's/old/new/' go.mod`,
 		notes: []string{
 			"a script command is required after -- (e.g. -- sed -i ...)",
 			"apply defaults to a dry-run; a real run additionally requires --dry-run=false AND --confirm",
+			"the --branch/--pr-title requirements are PR-mode rules: --mode=direct drops them and instead requires --direct-owners",
+			"--mode=direct commits and pushes straight to each repo's default branch with git (no PRs, no multi-gitter): every repo's owner must be in --direct-owners or the whole run refuses before cloning; --sign github is rejected (direct pushes can only be local or none); pushes are never forced",
 			"dry-run prints a per-repo status digest (would-change, no-change, error), or reports that multi-gitter's output could not be parsed (format drift or an all-errors run) instead of guessing; normally on stderr with a full-output temp file path, or on stdout (no temp file) under --quiet unless --plan-json owns stdout. multi-gitter's non-interactive dry-run does not emit a diff",
 			"--pr-body and --pr-body-file are mutually exclusive",
 			nameSelectionExclusiveNote,
@@ -151,6 +153,14 @@ var curatedCapabilities = map[string]curatedCommand{
 	"schema": {
 		example: "trailboss schema",
 		notes:   []string{"prints JSON Schema for the lockfile and every machine-readable payload; read-only and offline, needs no token, opens no network, runs no git"},
+	},
+	"serve": {
+		example: "trailboss serve --addr 127.0.0.1:25250",
+		notes: []string{
+			"starts the embedded ranch-office web UI (vanilla HTML/JS/CSS, no build step) plus a JSON API on --addr (default 127.0.0.1:25250)",
+			"browse selection lockfiles, cut new roundups, and run mirror/scan/apply as background jobs with live log streaming over server-sent events",
+			"the GitHub token comes only from TRAILBOSS_PAT in the server environment and is never exposed through the API; jobs run in-memory and are lost on restart",
+		},
 	},
 	"mcp": {
 		example: "trailboss mcp",

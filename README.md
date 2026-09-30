@@ -86,11 +86,12 @@ expect. You also need a **git identity** (`git config user.name`/`user.email`)
 | `select` | the roundup — resolve repos by org/user + topic, freeze the tally book |
 | `mirror` | drive the frozen herd into the local corral via ghorg (into `~/trailboss`) |
 | `scan <pattern>` | look the herd over — read-only regex across the local mirror, no API |
-| `apply … -- <cmd>` | run a change through every head and open PRs (via multi-gitter) |
+| `apply … -- <cmd>` | run a change through every head — `--mode=pr` opens PRs (via multi-gitter), `--mode=direct` pushes straight to default branches |
 | `check` | count the herd — diff the frozen tally against live discovery (drift) |
 | `doctor` | preflight — token source, principal, child tools on PATH, signing |
 | `selections` / `workspaces` | manage named tallies and separate corrals |
 | `guide` / `schema` | the operator playbook and the JSON-Schema output contract |
+| `serve` | the ranch office — embedded web UI + JSON API for selections and mirror/scan/apply jobs |
 
 Every read command takes `--json` (machine data on stdout, human banners on
 stderr) and `--quiet` for compact, token-cheap output. Exit codes are a stable
@@ -112,8 +113,47 @@ them.
 - **Provable-same-herd.** `mirror`, `scan`, and `apply` all read the one tally
   book and never re-discover, so the repos you inspect and the repos you change
   are the same list, in one artifact you review before anything runs.
-- trailboss **never runs `git` itself and never writes to GitHub directly** —
-  discovery is read-only REST, mirroring is ghorg, PRs are multi-gitter.
+- trailboss **never writes to GitHub directly in PR mode** — discovery is
+  read-only REST, mirroring is ghorg, PRs are multi-gitter. The one exception
+  is `apply --mode=direct`, which drives the `git` binary itself to commit
+  and push straight to each repo's default branch — gated by `--direct-owners`
+  (every repo's owner must be allow-listed or the whole run refuses before
+  cloning), never force-pushes, and authenticates through an askpass helper
+  (the token travels in the environment, never on the command line).
+
+### Direct mode
+
+For fleets you own outright, opening a PR per repo is ceremony with no
+reviewer on the other side. `--mode=direct` commits and pushes the change
+straight to each repo's default branch:
+
+```sh
+trailboss apply --mode=direct --direct-owners=toxicwind \
+  --commit-message "Bump base image" --sign local \
+  --dry-run=false --confirm -- sed -i 's|old|new|' Dockerfile
+```
+
+The rules: every selected repo's owner must appear in `--direct-owners` (the
+run refuses before cloning anything otherwise); `--sign github` is rejected
+(direct pushes can only be `local` or `none`); every repo is fetched before
+the script runs and a non-fast-forward push rejection is recorded per repo
+while the run moves on — trailboss never force-pushes.
+
+### The ranch office (`serve`)
+
+`trailboss serve` starts a local web UI — vanilla HTML/JS/CSS embedded in the
+binary, no build step — plus a JSON API for selections and background
+mirror/scan/apply jobs with live log streaming:
+
+```sh
+trailboss serve --addr 127.0.0.1:25250
+```
+
+The dashboard lists selection lockfiles, cuts new roundups, and launches jobs;
+each job renders a per-repo outcome table for direct-mode applies. The token
+comes only from `TRAILBOSS_PAT` in the server's environment — the API never
+exposes it, and argv/logs never carry it. Jobs run in-memory: a server restart
+loses them.
 
 ## For AI agents
 

@@ -1,17 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
 	"github.com/toxicwind/trailboss/apply"
 	"github.com/toxicwind/trailboss/models"
 	"github.com/toxicwind/trailboss/selection"
-	"github.com/spf13/cobra"
 )
 
 func newApplyCmd() *cobra.Command {
@@ -34,12 +36,20 @@ func newApplyCmd() *cobra.Command {
 		batchPause    time.Duration
 		planJSON      bool
 		expectSHA     string
+		mode          string
+		directOwners  []string
+		directWorkdir string
 	)
 	cmd := &cobra.Command{
 		Use:   "apply [flags] -- command [args...]",
 		Short: "Run a change across the selection and open PRs via multi-gitter",
-		Long: "apply runs a change command in each selected repo and opens a PR per repo " +
-			"via multi-gitter. It defaults to a dry-run; a real run additionally requires " +
+		Long: "apply runs a change command in each selected repo. In the default\n" +
+			"PR mode (--mode=pr) it opens one PR per repo via multi-gitter; with\n" +
+			"--mode=direct it instead commits and pushes straight to each repo's\n" +
+			"default branch with the git binary (no PRs). Direct mode is gated\n" +
+			"by --direct-owners — every repo's owner must be allow-listed — and\n" +
+			"never force-pushes.\n\n" +
+			"It defaults to a dry-run; a real run additionally requires " +
 			"--dry-run=false AND --confirm, and every run must state --sign.\n\n" +
 			"Base branch routing: omit --base-branch to let each PR target its repo's own " +
 			"default branch — trailboss passes no base to multi-gitter, which resolves " +
@@ -55,12 +65,24 @@ func newApplyCmd() *cobra.Command {
 			// safety guard — so a bad invocation fails without resolving a token
 			// (which can shell out to `gh`) or hitting the network.
 			script := scriptArgs(cmd, args)
-			if err := validateApply(applyValidation{
-				branch:        branch,
+			if mode != "pr" && mode != "direct" {
+				return fmt.Errorf("invalid --mode %q: must be pr or direct", mode)
+			}
+			if mode == "pr" {
+				if err := validateApply(applyValidation{
+					branch:        branch,
+					commitMessage: commitMessage,
+					prTitle:       prTitle,
+					sign:          sign,
+					script:        script,
+				}); err != nil {
+					return err
+				}
+			} else if err := validateDirectApply(directApplyValidation{
 				commitMessage: commitMessage,
-				prTitle:       prTitle,
 				sign:          sign,
 				script:        script,
+				owners:        directOwners,
 			}); err != nil {
 				return err
 			}
@@ -68,17 +90,23 @@ func newApplyCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// A long PR body is easier to supply from a file than a shell-quoted
-			// flag; --pr-body-file loads it. The two body sources are mutually
-			// exclusive so there's no ambiguity about which one wins.
-			body, err := resolvePRBody(prBody, prBodyFile)
-			if err != nil {
-				return err
+			// The PR body only exists in PR mode. A long PR body is easier to
+			// supply from a file than a shell-quoted flag; --pr-body-file
+			// loads it. The two body sources are mutually exclusive so
+			// there's no ambiguity about which one wins.
+			if mode == "pr" {
+				body, err := resolvePRBody(prBody, prBodyFile)
+				if err != nil {
+					return err
+				}
+				prBody = body
 			}
-			prBody = body
-			// Safety guard: a real run opens PRs. Require an explicit --confirm
-			// so it can never happen by omitting a flag.
+			// Safety guard: a real run opens PRs or pushes commits. Require an
+			// explicit --confirm so it can never happen by omitting a flag.
 			if !dryRun && !confirm {
+				if mode == "direct" {
+					return errors.New("refusing to push commits: re-run with --confirm to disable the dry-run safety, or keep --dry-run")
+				}
 				return errors.New("refusing to open PRs: re-run with --confirm to disable the dry-run safety, or keep --dry-run")
 			}
 			path, err := resolveSelectionPath(name, selectionPath)
@@ -106,26 +134,29 @@ func newApplyCmd() *cobra.Command {
 				return err
 			}
 			announceTokenSource(errOut, source)
-			if err := requireTool("multi-gitter", "https://github.com/lindell/multi-gitter#installation"); err != nil {
-				return err
+			if mode == "direct" {
+				// Direct mode drives the git binary itself — no multi-gitter.
+				// The token reaches git only through the TRAILBOSS_ASKPASS_TOKEN
+				// env var on the askpass helper (never on the command line),
+				// wired inside apply.Direct.
+				if err := requireTool("git", "https://git-scm.com/downloads"); err != nil {
+					return err
+				}
+			} else {
+				if err := requireTool("multi-gitter", "https://github.com/lindell/multi-gitter#installation"); err != nil {
+					return err
+				}
+				// Surface the known-good-floor advisory HERE, not only in `doctor`: the
+				// floor exists to make silent behavioural drift visible, and an operator
+				// (or agent) who runs apply without a prior doctor would otherwise never
+				// see it. Advisory only — apply never refuses on version (see the helper).
+				warnMultiGitterFloor(cmd.Context(), errOut)
 			}
-			// Surface the known-good-floor advisory HERE, not only in `doctor`: the
-			// floor exists to make silent behavioural drift visible, and an operator
-			// (or agent) who runs apply without a prior doctor would otherwise never
-			// see it. Advisory only — apply never refuses on version (see the helper).
-			warnMultiGitterFloor(cmd.Context(), errOut)
 			if err := verifyAndAnnouncePrincipal(cmd.Context(), errOut, token); err != nil {
 				return err
 			}
 			spec := models.ApplySpec{
-				Branch:        branch,
-				BaseBranch:    baseBranch,
 				CommitMessage: commitMessage,
-				PRTitle:       prTitle,
-				PRBody:        prBody,
-				Labels:        labels,
-				Reviewers:     reviewers,
-				Draft:         draft,
 				DryRun:        dryRun,
 				Confirm:       confirm,
 				Script:        script,
@@ -133,6 +164,19 @@ func newApplyCmd() *cobra.Command {
 				BatchSize:     batchSize,
 				BatchPause:    batchPause,
 			}
+			if mode == "direct" {
+				// Direct mode targets every repo's default branch: no branch,
+				// PR title/body, labels, reviewers, or draft makes sense.
+				return runDirectApply(cmd.Context(), directRunner(errOut), sel, spec, token,
+					directOwners, directWorkdir, errOut)
+			}
+			spec.Branch = branch
+			spec.BaseBranch = baseBranch
+			spec.PRTitle = prTitle
+			spec.PRBody = prBody
+			spec.Labels = labels
+			spec.Reviewers = reviewers
+			spec.Draft = draft
 			run := execApplyRun
 			if quiet {
 				run = execApplyRunQuiet
@@ -153,11 +197,14 @@ func newApplyCmd() *cobra.Command {
 	f.StringVar(&sign, "sign", "", "how to sign commits (required): local (your GPG key via git), github (GitHub-verified via API), or none (unsigned)")
 	f.BoolVar(&draft, "draft", false, "open PRs as drafts")
 	f.BoolVar(&dryRun, "dry-run", true, "run without pushing or opening PRs (default; pass --dry-run=false for a real run)")
-	f.BoolVar(&confirm, "confirm", false, "required alongside --dry-run=false to actually open PRs")
+	f.BoolVar(&confirm, "confirm", false, "required alongside --dry-run=false to actually write to GitHub (open PRs in pr mode, push commits in direct mode)")
 	f.IntVar(&batchSize, "batch-size", 0, "open PRs in batches of this many repos to stay under GitHub rate limits (0 = one run over the whole selection)")
 	f.DurationVar(&batchPause, "batch-pause", 0, "pause between batches, e.g. 60s (only used with --batch-size)")
 	f.StringVar(&expectSHA, "expect-selection-sha256", "", "refuse to run unless the selection lockfile's sha256 (over its exact bytes) matches this 64-char hex digest — binds an apply to the precise selection a plan was reviewed against (empty = no check)")
 	f.BoolVar(&planJSON, "plan-json", false, "emit a machine-readable plan of what trailboss will invoke (invocation metadata only, not the diff; command redacted to argv[0]) on stdout before delegating; supplements — does not replace — the dry-run status digest (on stderr; suppressed under --quiet, where the plan owns stdout)")
+	f.StringVar(&mode, "mode", "pr", "how to land the change: pr (open a PR per repo via multi-gitter) or direct (commit and push to each repo's default branch with git)")
+	f.StringSliceVar(&directOwners, "direct-owners", nil, "owner allow-list for --mode=direct: every selected repo's owner must be listed (comma-separated or repeatable); the whole run refuses otherwise")
+	f.StringVar(&directWorkdir, "direct-workdir", "", "working directory for --mode=direct clones (default: a fresh temporary directory)")
 	return cmd
 }
 
@@ -417,4 +464,106 @@ func scriptArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 	return args[dash:]
+}
+
+// directApplyValidation is the subset of `apply` flags mandatory for direct
+// mode. Unlike PR mode it needs no branch (every repo's default branch is the
+// target) and no PR title/body — but it does need the owner allow-list.
+type directApplyValidation struct {
+	commitMessage string
+	sign          string
+	script        []string
+	owners        []string
+}
+
+// validateDirectApply enforces the flags required for a direct-mode run. It
+// sits next to validateApply in this package so both modes read from one
+// playbook and the per-mode rules can't drift into each other's validator.
+func validateDirectApply(dv directApplyValidation) error {
+	if dv.commitMessage == "" {
+		return errors.New("--commit-message is required")
+	}
+	if err := validateSign(dv.sign); err != nil {
+		return err
+	}
+	if dv.sign == models.SignGitHub {
+		return fmt.Errorf("--sign %q is PR-mode only: direct pushes go through git, which can only sign %q (your GPG key) or %q (unsigned)", models.SignGitHub, models.SignLocal, models.SignNone)
+	}
+	if len(dv.script) == 0 {
+		return errors.New("a script command is required after --")
+	}
+	if len(dv.owners) == 0 {
+		return errors.New("--direct-owners is required for --mode=direct: list every repo owner the run may push to (comma-separated or repeatable)")
+	}
+	return nil
+}
+
+// directRunner builds the apply.Runner for direct mode: each command's output
+// streams to errOut live and is also captured for error detail, mirroring
+// execApplyRun's contract. runDirectApply takes the runner as a parameter so
+// tests can substitute a fake.
+func directRunner(errOut io.Writer) apply.Runner {
+	return func(ctx context.Context, name string, args, env []string) ([]byte, error) {
+		var buf bytes.Buffer
+		err := execRunToWriter(ctx, name, args, env, io.MultiWriter(errOut, &buf))
+		return buf.Bytes(), err
+	}
+}
+
+// runDirectApply runs the change across the selection in direct mode: clone
+// each repo, run the script, commit, and push straight to the default branch
+// via apply.Direct. Git's chatter streams to errOut live; the per-repo outcome
+// table lands there at the end.
+func runDirectApply(ctx context.Context, run apply.Runner, sel models.Selection, spec models.ApplySpec, token string, owners []string, workdir string, errOut io.Writer) error {
+	mode := "LIVE — pushing commits to default branches"
+	if spec.DryRun {
+		mode = "dry-run — no push"
+	}
+	banner(errOut, fmt.Sprintf("Applying to %d repo(s) [%s] (direct mode)", len(sel.Repos), mode))
+	fmt.Fprintf(errOut, "  signing: %s\n", signTrust(spec.Sign))
+	fmt.Fprintf(errOut, "  owners allow-list: %s\n", strings.Join(owners, ", "))
+	res, err := apply.Direct(ctx, run, sel, spec, token, apply.DirectOpts{
+		AllowedOwners: owners,
+		WorkDir:       workdir,
+		Concurrency:   4,
+	})
+	printDirectOutcomes(errOut, res)
+	if err != nil {
+		return err
+	}
+	done(errOut, "direct apply complete")
+	return nil
+}
+
+// printDirectOutcomes renders the per-repo outcome table: pushed, dry-run
+// changed, no-change, or the per-repo error.
+func printDirectOutcomes(w io.Writer, res apply.DirectResult) {
+	for _, o := range res.Outcomes {
+		switch {
+		case o.Err != "":
+			fmt.Fprintf(w, "  %s   error: %s\n", o.FullName, firstLine(o.Err))
+		case o.Pushed:
+			fmt.Fprintf(w, "  %s   pushed\n", o.FullName)
+		case o.DryRun && o.DiffStat != "":
+			fmt.Fprintf(w, "  %s   would change%s\n", o.FullName, diffStatSuffix(o.DiffStat))
+		case o.DryRun:
+			fmt.Fprintf(w, "  %s   no change\n", o.FullName)
+		default:
+			fmt.Fprintf(w, "  %s   no change\n", o.FullName)
+		}
+	}
+}
+
+func diffStatSuffix(stat string) string {
+	if stat == "" {
+		return ""
+	}
+	return " (" + strings.TrimSpace(strings.ReplaceAll(stat, "\n", ", ")) + ")"
+}
+
+func firstLine(s string) string {
+	if i := strings.IndexByte(s, '\n'); i >= 0 {
+		return s[:i]
+	}
+	return s
 }

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>trailboss — the ranch office</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="brand">
+  <div class="brand-mark">🐂</div>
+  <div>
+    <h1>trailboss</h1>
+    <p class="tagline">the ranch office — selections, mirrors, scans &amp; applies</p>
+  </div>
+  <nav>
+    <button data-view="dashboard" class="nav-btn active">Dashboard</button>
+    <button data-view="jobs" class="nav-btn">Jobs</button>
+  </nav>
+</header>
+<main>
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- DASHBOARD -->
+  <section id="view-dashboard" class="view">
+    <div class="panel">
+      <h2>🤠 New roundup</h2>
+      <p class="hint">Cut the herd: resolve an org's repos by topic and freeze the tally book.</p>
+      <form id="select-form" class="form-grid">
+        <label>Org / user <input name="org" required placeholder="toxicwind"></label>
+        <label>Topics (comma-separated) <input name="topics" placeholder="platform, go"></label>
+        <label>Save as (optional name) <input name="name" placeholder="fleet-go"></label>
+        <label class="check"><input type="checkbox" name="allRepos"> all repos, ignore topics</label>
+        <button type="submit" class="btn primary">Run the roundup</button>
+      </form>
+    </div>
+    <div class="panel">
+      <h2>📖 Tally books <span class="muted">(selections)</span></h2>
+      <p class="hint">Lockfiles found in the server's working directory, the named registry, and the mirror workspace.</p>
+      <table id="selections-table" class="tbl">
+        <thead><tr><th>Name</th><th>Owner</th><th>Repos</th><th>Resolved</th><th></th></tr></thead>
+        <tbody><tr><td colspan="5" class="muted">loading…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SELECTION DETAIL -->
+  <section id="view-selection" class="view hidden">
+    <button class="btn ghost back" data-view="dashboard">← back to dashboard</button>
+    <div class="panel">
+      <h2 id="sel-title">📖 selection</h2>
+      <p id="sel-meta" class="hint"></p>
+      <div class="actions">
+        <button id="sel-mirror" class="btn">🐴 Mirror into corral</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>🔍 Scan the corral</h3>
+      <form id="scan-form" class="form-row">
+        <input name="pattern" required placeholder="regex, e.g. golang:1\.22" class="grow">
+        <button type="submit" class="btn">Scan</button>
+      </form>
+      <p class="hint">Read-only regex over the local mirror — no GitHub, no rate limit.</p>
+    </div>
+    <div class="panel">
+      <h3>⚙️ Apply a change</h3>
+      <form id="apply-form" class="form-grid">
+        <label class="span2">Command (one line, shell-quoted) <input name="scriptLine" required placeholder="sed -i 's|golang:1.22|golang:1.24|g' Dockerfile"></label>
+        <label>Commit message <input name="commitMessage" required placeholder="Bump Go to 1.24"></label>
+        <label>Mode
+          <select name="mode">
+            <option value="pr">PR mode (multi-gitter)</option>
+            <option value="direct">Direct (push to default branches)</option>
+          </select>
+        </label>
+        <label>Branch (PR mode) <input name="branch" placeholder="bump-go"></label>
+        <label>Owners allow-list (direct mode, comma-separated) <input name="owners" placeholder="toxicwind"></label>
+        <label>Signing
+          <select name="sign">
+            <option value="none">none (unsigned)</option>
+            <option value="local">local (your GPG key)</option>
+            <option value="github">github (PR mode only)</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" name="dryRun" checked> dry-run (push nothing, open nothing)</label>
+        <label class="check"><input type="checkbox" name="confirm"> confirm <span class="muted">(required for a live run)</span></label>
+        <button type="submit" class="btn primary">Start apply job</button>
+      </form>
+      <p class="hint">Direct mode pushes straight to default branches — the owners allow-list is the safety gate, and a push is never forced.</p>
+    </div>
+    <div class="panel">
+      <h3>🐄 The herd <span id="sel-count" class="muted"></span></h3>
+      <table id="repos-table" class="tbl">
+        <thead><tr><th>Repo</th><th>Default branch</th><th>Topics</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- JOBS -->
+  <section id="view-jobs" class="view hidden">
+    <button class="btn ghost back" data-view="dashboard">← back to dashboard</button>
+    <div class="panel">
+      <h2>📋 Jobs</h2>
+      <p class="hint">Background runs on this server. Jobs are in-memory — a server restart loses them.</p>
+      <table id="jobs-table" class="tbl">
+        <thead><tr><th>ID</th><th>Kind</th><th>Status</th><th>Started</th><th>Summary</th><th></th></tr></thead>
+        <tbody><tr><td colspan="6" class="muted">loading…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- JOB DETAIL -->
+  <section id="view-job" class="view hidden">
+    <button class="btn ghost back" data-view="jobs">← back to jobs</button>
+    <div class="panel">
+      <h2 id="job-title">📋 job</h2>
+      <p id="job-meta" class="hint"></p>
+      <div id="job-result"></div>
+      <h3>📜 Log <span class="muted">(live)</span></h3>
+      <pre id="job-log" class="log"></pre>
+    </div>
+  </section>
+</main>
+<footer>
+  <span class="muted">trailboss ranch office — the token never leaves the server.</span>
+</footer>
+<script src="/app.js"></script>
+</body>
+</html>

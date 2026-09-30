@@ -29,13 +29,29 @@ it as a JSON lockfile, then delegates: **ghorg** mirrors the selection locally,
 **multi-gitter** applies changes and opens PRs. trailboss owns the *selection*;
 it does not reimplement mirroring or PR-fanout.
 
+Two ways to land a change: PR mode (the default — multi-gitter opens one PR per
+repo) and direct mode (`--mode=direct` — the `git` binary itself commits and
+pushes straight to each repo's default branch, gated by `--direct-owners`).
+`trailboss serve` embeds a web UI + JSON API that runs the same
+select/mirror/scan/apply machinery as background jobs with live log streaming.
+
 ## Hard rules
 
-- trailboss **never writes to GitHub and never runs `git` itself.** Discovery is
-  read-only REST; mirroring is ghorg; commits/pushes/PRs are multi-gitter. Adding
-  a `git` exec or a PR-create call means you're reinventing a delegated tool —
-  stop.
-- A real (non-dry-run) `trailboss apply` opens PRs and must never happen on an
+- PR mode **never writes to GitHub and never runs `git` itself**: discovery is
+  read-only REST; mirroring is ghorg; commits/pushes/PRs are multi-gitter. The
+  one deliberate exception is `apply --mode=direct` (below) — outside that
+  mode, adding a `git` exec or a PR-create call means you're reinventing a
+  delegated tool — stop.
+- `apply --mode=direct` is the narrow owned-fleet exception: it drives the
+  `git` binary itself to commit and push straight to each repo's default
+  branch. It is gated by `--direct-owners` (every repo's owner must be
+  allow-listed or the whole run refuses before cloning anything), never
+  force-pushes, rejects `--sign github` (direct pushes can only be `local` or
+  `none`), and authenticates git through an askpass helper — the token travels
+  in the environment, never on the command line. The real-run authorization
+  rule below applies to direct mode too: `--dry-run=false --confirm` plus
+  explicit human authorization for that specific change.
+- A real (non-dry-run) `trailboss apply` opens PRs or pushes commits and must never happen on an
   agent's own initiative or by accident. `apply` defaults to dry-run; a real run
   additionally needs `--dry-run=false --confirm`. An agent may perform the real
   run **only when the human has explicitly authorized this specific fleet
@@ -88,7 +104,9 @@ it does not reimplement mirroring or PR-fanout.
 - Flat packages (`cmd/`, `models/`, `client/`, `discovery/`, `selection/`,
   `mirror/`, `apply/`); no `internal/`/`pkg/`. Tests alongside code, testify.
 - Go module deps are pinned (cobra, go-github, testify); adding one needs asking.
-  ghorg and multi-gitter are runtime CLI deps invoked via `exec`, checked on PATH.
+  ghorg and multi-gitter are runtime CLI deps invoked via `exec`, checked on PATH
+  (`apply --mode=direct` additionally needs `git` — it is the one mode that
+  drives the git binary itself).
 
 ## Before every commit
 

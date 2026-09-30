@@ -1,0 +1,108 @@
+/* trailboss ranch office — dark western theme */
+:root {
+  --bg: #14100b;
+  --panel: #1e1811;
+  --panel2: #262019;
+  --line: #3a2f22;
+  --text: #e8dcc8;
+  --muted: #a89880;
+  --amber: #d9a441;
+  --amber-dim: #8a6a2e;
+  --green: #7fb069;
+  --red: #d1604d;
+  --blue: #6aa8d8;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  line-height: 1.45;
+}
+h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; color: var(--amber); margin: 0 0 .5em; }
+h1 { font-size: 1.9rem; margin: 0; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1.1rem; }
+.muted { color: var(--muted); font-weight: normal; }
+.hint { color: var(--muted); font-size: .88rem; margin: .3em 0 .8em; }
+
+.brand {
+  display: flex; align-items: center; gap: 1rem;
+  padding: .9rem 1.4rem;
+  background: linear-gradient(180deg, #241b10, #171209);
+  border-bottom: 2px solid var(--amber-dim);
+  position: sticky; top: 0; z-index: 10;
+}
+.brand-mark { font-size: 2.2rem; }
+.tagline { margin: .1em 0 0; color: var(--muted); font-size: .85rem; }
+.brand nav { margin-left: auto; display: flex; gap: .5rem; }
+.nav-btn {
+  background: transparent; border: 1px solid var(--line); color: var(--text);
+  padding: .45rem .9rem; border-radius: 6px; cursor: pointer; font-size: .9rem;
+}
+.nav-btn.active, .nav-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+main { max-width: 1100px; margin: 0 auto; padding: 1.2rem; }
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 1.1rem 1.2rem; margin-bottom: 1.2rem;
+}
+.hidden { display: none !important; }
+.view.hidden { display: none; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+.form-grid .span2 { grid-column: 1 / -1; }
+.form-row { display: flex; gap: .6rem; }
+.grow { flex: 1; }
+label { display: flex; flex-direction: column; gap: .3rem; font-size: .88rem; color: var(--muted); }
+label.check { flex-direction: row; align-items: center; gap: .5rem; color: var(--text); }
+input, select {
+  background: var(--panel2); border: 1px solid var(--line); color: var(--text);
+  padding: .5rem .6rem; border-radius: 6px; font-size: .92rem; width: 100%;
+}
+input:focus, select:focus { outline: none; border-color: var(--amber); }
+.btn {
+  background: var(--panel2); border: 1px solid var(--amber-dim); color: var(--text);
+  padding: .5rem 1rem; border-radius: 6px; cursor: pointer; font-size: .9rem;
+  align-self: end; justify-self: start;
+}
+.btn:hover { border-color: var(--amber); color: var(--amber); }
+.btn.primary { background: #3d2c14; border-color: var(--amber); color: var(--amber); font-weight: bold; }
+.btn.ghost { border-color: transparent; color: var(--muted); }
+.btn.ghost:hover { color: var(--amber); }
+.btn:disabled { opacity: .5; cursor: default; }
+.back { margin-bottom: .8rem; padding-left: 0; }
+.actions { display: flex; gap: .6rem; margin-top: .6rem; }
+
+.tbl { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.tbl th, .tbl td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); }
+.tbl th { color: var(--amber); font-family: Georgia, serif; font-weight: normal; }
+.tbl tr:hover td { background: #221b12; }
+.tbl .num { text-align: right; }
+
+.pill {
+  display: inline-block; padding: .15rem .6rem; border-radius: 999px;
+  font-size: .78rem; border: 1px solid var(--line);
+}
+.pill.queued { color: var(--muted); }
+.pill.running { color: var(--blue); border-color: var(--blue); }
+.pill.done { color: var(--green); border-color: var(--green); }
+.pill.error { color: var(--red); border-color: var(--red); }
+
+.log {
+  background: #0d0a06; border: 1px solid var(--line); border-radius: 8px;
+  padding: .8rem; max-height: 60vh; overflow-y: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .8rem;
+  white-space: pre-wrap; word-break: break-word; margin: 0;
+}
+.toast {
+  position: fixed; top: 4.5rem; right: 1.2rem; z-index: 20;
+  background: var(--panel2); border: 1px solid var(--amber); color: var(--text);
+  padding: .7rem 1rem; border-radius: 8px; max-width: 24rem;
+}
+pre.diff { background: #0d0a06; padding: .4rem .6rem; border-radius: 6px; font-size: .78rem; margin: .3rem 0 0; }
+.outcome-err { color: var(--red); font-size: .82rem; }
+footer { text-align: center; padding: 1.5rem; color: var(--muted); font-size: .8rem; }
+a { color: var(--amber); }
+@media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
