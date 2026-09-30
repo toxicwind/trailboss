@@ -4,7 +4,7 @@
     "apply-plan": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
-      "description": "The invocation plan apply --plan-json emits — what goldfinger is about to run, not the resulting diff.",
+      "description": "The invocation plan apply --plan-json emits — what trailboss is about to run, not the resulting diff.",
       "properties": {
         "base_branch_source": {
           "type": "string"
@@ -341,7 +341,7 @@
     "error": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
-      "description": "The single-line failure object goldfinger emits to stderr under --quiet: a parseable error message plus the process exit code, in place of the human `Error:` line.",
+      "description": "The single-line failure object trailboss emits to stderr under --quiet: a parseable error message plus the process exit code, in place of the human `Error:` line.",
       "properties": {
         "error": {
           "type": "string"
@@ -364,7 +364,7 @@
     "lockfile": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
-      "description": "The frozen selection persisted to goldfinger.selection and consumed by mirror and apply.",
+      "description": "The frozen selection persisted to trailboss.selection and consumed by mirror and apply.",
       "properties": {
         "branchesChecked": {
           "items": {
@@ -901,7 +901,7 @@
         "owner",
         "createdAt"
       ],
-      "title": "workspace manifest (goldfinger-workspace.json)",
+      "title": "workspace manifest (trailboss-workspace.json)",
       "type": "object"
     },
     "workspaces": {

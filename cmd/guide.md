@@ -1,36 +1,36 @@
-goldfinger — operator guide
+trailboss — operator guide
 
-goldfinger is an orchestration layer. It resolves a set of GitHub repos once,
+trailboss is an orchestration layer. It resolves a set of GitHub repos once,
 freezes them as a reviewable "selection" lockfile, then drives two external
 tools against that exact set:
   - ghorg        mirrors the selection into a local workspace (clone/pull)
   - multi-gitter applies a change across the selection and opens PRs
 
-goldfinger never writes to GitHub itself. Discovery is read-only; mirroring is
+trailboss never writes to GitHub itself. Discovery is read-only; mirroring is
 ghorg; commits/pushes/PRs are multi-gitter.
 
 INSTALL
-  brew install redscaresu/tap/goldfinger
+  brew install redscaresu/tap/trailboss
   Homebrew pulls ghorg and multi-gitter in automatically (formula deps) and puts
   all three on PATH — so the "install ghorg and multi-gitter" prerequisite below
   is already satisfied. Non-brew: download a binary from the GitHub Releases page
-  and install ghorg + multi-gitter yourself. Verify with `goldfinger --version`.
+  and install ghorg + multi-gitter yourself. Verify with `trailboss --version`.
 
 PREREQUISITES
-  - Auth: if you're logged in with the GitHub CLI (gh auth login), goldfinger
+  - Auth: if you're logged in with the GitHub CLI (gh auth login), trailboss
     uses that session automatically — nothing to set. Otherwise (e.g. CI) set
-    GOLD_FINGER_PAT to a GitHub PAT, which overrides the gh session when present.
-    Either way goldfinger maps the one token to the env vars ghorg
+    TRAILBOSS_PAT to a GitHub PAT, which overrides the gh session when present.
+    Either way trailboss maps the one token to the env vars ghorg
     (GHORG_GITHUB_TOKEN) and multi-gitter (GITHUB_TOKEN) expect — one token, not
     three.
-    Precedence: GOLD_FINGER_PAT if set, else `gh auth token`. FOOTGUN: the
+    Precedence: TRAILBOSS_PAT if set, else `gh auth token`. FOOTGUN: the
     `gh auth token` subprocess itself honours an ambient GH_TOKEN/GITHUB_TOKEN,
-    so a stray one silently changes which identity goldfinger (and ghorg)
+    so a stray one silently changes which identity trailboss (and ghorg)
     authenticate as — a wrong-identity run looks like "0 repos", not an auth
     error. Unless --quiet is set, every run prints its token source +
     authenticated principal on stderr and warns when a gh token may be shadowed;
     if the identity is wrong, `unset GITHUB_TOKEN GH_TOKEN` or set
-    GOLD_FINGER_PAT. The token is never printed.
+    TRAILBOSS_PAT. The token is never printed.
   - ghorg and multi-gitter on PATH (the brew install above pulls both in;
     install them yourself only for non-brew setups).
   - Configure a git identity (git config user.name / user.email). multi-gitter
@@ -39,11 +39,11 @@ PREREQUISITES
 
 WORKFLOW
   1. Select — resolve and freeze the repo set:
-       goldfinger select --org <owner> --all-repos
-       goldfinger select --org <owner> --topic platform --topic payments
-       goldfinger select --org <owner> --repo svc-a --repo svc-b
-       goldfinger select --org <owner> --repos-from repos.txt
-     Writes ./goldfinger.selection (JSON: owner/name list + provenance). --org
+       trailboss select --org <owner> --all-repos
+       trailboss select --org <owner> --topic platform --topic payments
+       trailboss select --org <owner> --repo svc-a --repo svc-b
+       trailboss select --org <owner> --repos-from repos.txt
+     Writes ./trailboss.selection (JSON: owner/name list + provenance). --org
      accepts a GitHub org OR user. Pick exactly one selection mode (they are
      mutually exclusive): --all-repos, one or more --topic, or an EXPLICIT set of
      named repos via --repo (repeatable) / --repos-from <file> (one bare name per
@@ -65,7 +65,7 @@ WORKFLOW
      as a top-level `digest`; `selections` shows it as a DIGEST column.
 
      If you plan to `mirror --branch <b>` (e.g. dev), add `--branch-presence <b>`
-     here so goldfinger records (read-only) which repos actually have that branch
+     here so trailboss records (read-only) which repos actually have that branch
      and freezes it into the lockfile — the later mirror report then tells you
      which repos fall back to their default instead of silently missing the
      branch. These facts are recorded at selection time and can drift; re-select
@@ -73,31 +73,31 @@ WORKFLOW
 
   2. Mirror — clone the selection locally (OPTIONAL — for reading/scanning the
      fleet; NOT needed to open PRs. apply clones on its own, see step 3):
-       goldfinger mirror
-     Repos land in <workspace>/<owner> (default workspace ~/goldfinger).
+       trailboss mirror
+     Repos land in <workspace>/<owner> (default workspace ~/trailboss).
      Re-run any time to refresh: ghorg pulls existing clones instead of
      re-cloning, and by default also `git clean`s each one — so the persistent
      workspace stays a pristine reflection of upstream and any local edits you
      made in it are discarded. Pass --no-clean to keep them, or use --purpose
      (below) to work in a throwaway timestamped snapshot instead.
 
-     When ghorg finishes, goldfinger prints its own reconciliation line, e.g.
+     When ghorg finishes, trailboss prints its own reconciliation line, e.g.
        ✓ reconciliation: in selection: 59 | on disk: 59 | branch present: 15 | fell back: 44
      Read THIS, not ghorg's "N new clones" — ghorg counts only *newly* cloned
      repos, so a re-mirror of an unchanged fleet says "0 new clones" while all 59
      are present. "in selection" is the lockfile count; "on disk" is a read-only
      count of how many of those repos actually landed under <workspace>/<owner>
-     as real clones — goldfinger checks for a .git entry, so a leftover or
+     as real clones — trailboss checks for a .git entry, so a leftover or
      half-written directory from an interrupted mirror is not miscounted as
-     covered (no git is run, just a stat). If on disk < in selection, goldfinger warns (⚠) that the mirror
+     covered (no git is run, just a stat). If on disk < in selection, trailboss warns (⚠) that the mirror
      under-covered the selection. With --branch, "branch present"/"fell back"
      (and "unknown", when any) explain ghorg's per-repo "Could not checkout
      <branch>" lines as expected fall-backs, not failures — same facts as the
      --report-json branchStatus below.
 
-     ghorg's output still streams live to stderr, but goldfinger also captures
+     ghorg's output still streams live to stderr, but trailboss also captures
      the full run to a 0600 temp log and prints its path
-       ✓ ghorg output captured at /var/folders/.../goldfinger-mirror-output-*.log
+       ✓ ghorg output captured at /var/folders/.../trailboss-mirror-output-*.log
      so you can drill into clone errors behind a shortfall without scrolling
      back (on a failed mirror the same path is surfaced with ⚠). Under --quiet
      the output is discarded — no live stream, no log.
@@ -111,50 +111,50 @@ WORKFLOW
      (--clone-depth 1) fetches only each repo's default branch, so
      `mirror --branch dev --clone-depth 1` would leave repos on their default
      wherever dev exists but isn't the default — a silent coverage gap.
-     goldfinger refuses that combination; omit --clone-depth (full depth) when
+     trailboss refuses that combination; omit --clone-depth (full depth) when
      you pass --branch. Shallow is fine for a plain default-branch scan.
 
      To see which repos got the branch vs fell back, add --report-json (prints a
      JSON report to stdout instead of the bare workspace-path line) or
-     --write-report (writes <workspace>/goldfinger-mirror.json, only on a
+     --write-report (writes <workspace>/trailboss-mirror.json, only on a
      successful mirror). The report is built from the lockfile alone (no git, no
      re-discovery): it lists each repo's branchStatus as has-branch /
      falls-back-to-default / unknown. "unknown" means the branch wasn't checked
-     at select time (run select --branch-presence <b> first) — goldfinger does
+     at select time (run select --branch-presence <b> first) — trailboss does
      NOT guess. Branch facts are recorded at selection time and can drift.
 
      For a one-off mass-PR campaign, use --purpose for an ephemeral, timestamped
-     workspace: you supply the purpose, goldfinger stamps the time to the
+     workspace: you supply the purpose, trailboss stamps the time to the
      millisecond so each run gets its own pristine dir —
-       goldfinger mirror --purpose keyv-cve --clone-depth 1
-       # clones into ~/goldfinger/keyv-cve-2026-08-04-132045.123/<owner>/
+       trailboss mirror --purpose keyv-cve --clone-depth 1
+       # clones into ~/trailboss/keyv-cve-2026-08-04-132045.123/<owner>/
        # ...scan / develop the change script against that snapshot...
      With --branch the branch is folded into the name too, <purpose>-<branch>-<stamp>
      (a branch's slashes become dashes) —
-       goldfinger mirror --purpose keyv-cve --branch dev
-       # clones into ~/goldfinger/keyv-cve-dev-2026-08-04-132045.123/<owner>/
+       trailboss mirror --purpose keyv-cve --branch dev
+       # clones into ~/trailboss/keyv-cve-dev-2026-08-04-132045.123/<owner>/
      A --purpose mirror also drops a small sidecar manifest at the snapshot root
-     (goldfinger-workspace.json: purpose, branch, stamp, owner, createdAt) so
+     (trailboss-workspace.json: purpose, branch, stamp, owner, createdAt) so
      `workspaces list/prune` (below) get reliable structured metadata — the dir
      name alone can't be split back into its parts (purpose and a sanitised
      branch can both contain '-'). The manifest is written only on a successful,
      non-dry-run mirror.
-     goldfinger NEVER deletes the directory — it persists so you can review it;
-     reclaim old snapshots with `goldfinger workspaces prune` (below), or just
+     trailboss NEVER deletes the directory — it persists so you can review it;
+     reclaim old snapshots with `trailboss workspaces prune` (below), or just
      rm -rf the dir yourself when done
-     (e.g. rm -rf ~/goldfinger/keyv-cve-2026-08-04-132045.123).
+     (e.g. rm -rf ~/trailboss/keyv-cve-2026-08-04-132045.123).
      A fresh per-campaign clone is pristine by construction, so it never hits the
      divergence trap a long-lived clone can: if upstream rebases/squashes its
      default branch, a stale persistent clone can no longer git pull (exit 128) —
      git clean removes files, not commits, so it cannot recover a diverged clone.
      Keep the durable artifact (the lockfile), not the clones.
 
-     The lockfile is authoritative: goldfinger strips set-narrowing/pruning
+     The lockfile is authoritative: trailboss strips set-narrowing/pruning
      GHORG_* env vars and forces an empty ghorgignore, and invokes multi-gitter
      with an empty --config, so ambient host config can't change the set.
 
   3. Apply — run a change across the selection and open PRs:
-       goldfinger apply --branch bump --commit-message "msg" --pr-title "title" \
+       trailboss apply --branch bump --commit-message "msg" --pr-title "title" \
          --sign local -- sed -i 's|old|new|g' Dockerfile
      The command after -- runs in each repo's checkout (via multi-gitter), on
      your machine — keep it portable (`sed -i` differs on macOS/BSD). For
@@ -166,12 +166,12 @@ WORKFLOW
      mirrored in step 2 — so always --dry-run first (it clones fresh too) to see
      which repos would change, report no change, or error rather than trusting
      the snapshot you inspected. Non-interactive multi-gitter dry-run does NOT
-     emit a unified diff; goldfinger prints a status digest plus a full-output
-     file path. If multi-gitter's output ever fails to match a format goldfinger
+     emit a unified diff; trailboss prints a status digest plus a full-output
+     file path. If multi-gitter's output ever fails to match a format trailboss
      recognises (a version drift, or a run where every repo errored), the digest
      says so — "could not parse … per-repo status unavailable" — instead of
      guessing a per-repo verdict; read the full-output file in that case.
-     Base branch: with --base-branch OMITTED, goldfinger passes no base to
+     Base branch: with --base-branch OMITTED, trailboss passes no base to
      multi-gitter, which targets each repo's own LIVE default branch at run time —
      so a selection mixing dev-default and main-default repos routes correctly in
      one run, no per-repo config needed. Pass --base-branch only to FORCE a single
@@ -200,17 +200,17 @@ SIGNING (--sign, REQUIRED — no default)
 
 PREFLIGHT (doctor)
   Before your first run on a machine (or in CI), confirm the environment:
-       goldfinger doctor
-       goldfinger doctor --json
+       trailboss doctor
+       trailboss doctor --json
   It is entirely read-only — never writes GitHub, never runs git, never prints the
   token — and reports one line per check:
     - auth         : which token SOURCE and GitHub PRINCIPAL a run would use
-                     (authenticated as <login> via GOLD_FINGER_PAT / gh session).
+                     (authenticated as <login> via TRAILBOSS_PAT / gh session).
     - auth-shadow  : warns if an ambient GITHUB_TOKEN/GH_TOKEN may be shadowing
                      your gh login (the wrong-identity footgun above).
     - ghorg /      : each child tool's PATH location + version, or a fail with an
       multi-gitter   install hint if missing. multi-gitter is also checked against
-                     goldfinger's known-good version floor (currently 0.63.1, the
+                     trailboss's known-good version floor (currently 0.63.1, the
                      version apply's local-signing and dry-run parsing were
                      verified against) — an older or unreadable version warns
                      (advisory, never a fail).
@@ -221,13 +221,13 @@ PREFLIGHT (doctor)
                      (advisory only — github/none don't need local config).
   Exit status: 0 nothing failed, 1 a check failed (no token, a missing child
   tool), 2 doctor itself could not run. Warns and info never fail the run, so
-  `goldfinger doctor` is a safe CI gate for "can this box run goldfinger at all".
+  `trailboss doctor` is a safe CI gate for "can this box run trailboss at all".
 
 DRIFT CHECK
   A selection is frozen at select time; the world moves on. Before a big mirror
   or apply, confirm the lockfile still matches reality:
-       goldfinger check
-       goldfinger check --name platform
+       trailboss check
+       trailboss check --name platform
   It re-runs discovery using the selection's OWN recorded filter and diffs the
   result against the lockfile — reporting repos added (+), removed with a reason
   (-), whose default branch has moved (~), or whose owner type has flipped (!).
@@ -240,14 +240,14 @@ SCAN — read/audit the mirrored fleet (scan)
   supply-chain sweeps over the frozen selection ("where does debian:bullseye
   appear?", "does any repo pin a poisoned name@version?"). It reads the lockfile
   for the exact repo set, then greps the clones already on disk — so mirror first.
-       goldfinger mirror                       # clone the selection (step 2)
-       goldfinger scan "debian:bullseye"       # regex search, human summary
-       goldfinger scan --json "name@1\.2\.3"   # JSON match report on stdout
+       trailboss mirror                       # clone the selection (step 2)
+       trailboss scan "debian:bullseye"       # regex search, human summary
+       trailboss scan --json "name@1\.2\.3"   # JSON match report on stdout
   It is entirely local: no git, no network, no token — so it burns ZERO GitHub
   rate limit (the whole point of reading via local clones instead of the API).
   The pattern is a RE2 regular expression by default; -F/--fixed-strings searches
   for a literal (metacharacters escaped), -i/--ignore-case is case-insensitive.
-  Repos are read from <workspace>/<owner> (default ~/goldfinger; override with
+  Repos are read from <workspace>/<owner> (default ~/trailboss; override with
   --workspace to point at a snapshot).
 
   Provable-same-set, applied to reads: scan searches EXACTLY the lockfile's repos
@@ -262,40 +262,40 @@ SCAN — read/audit the mirrored fleet (scan)
   Multi-branch (dev vs main in one sweep) is two mirrors, not a REST scan: the
   code-search API only indexes the default branch, and per-branch blob reads would
   reintroduce the rate-limited API scan mirror exists to avoid. So:
-       goldfinger mirror --purpose audit --branch dev
-       goldfinger mirror --purpose audit --branch main
-       goldfinger scan --workspace ~/goldfinger/audit-dev-<stamp>  --json "PATTERN"
-       goldfinger scan --workspace ~/goldfinger/audit-main-<stamp> --json "PATTERN"
+       trailboss mirror --purpose audit --branch dev
+       trailboss mirror --purpose audit --branch main
+       trailboss scan --workspace ~/trailboss/audit-dev-<stamp>  --json "PATTERN"
+       trailboss scan --workspace ~/trailboss/audit-main-<stamp> --json "PATTERN"
        # diff the two JSON reports
   When the workspace is a --purpose snapshot, scan reads the branch from its
   sidecar manifest and reports it as `branch` (the branch the mirror requested;
   a repo may have fallen back to its default, same caveat as the mirror report).
 
 NAMED SELECTIONS
-  By default a selection is ./goldfinger.selection. To keep several standing
+  By default a selection is ./trailboss.selection. To keep several standing
   cohorts, name them: `select --name platform ...` stores it in a registry
-  (~/.config/goldfinger/selections/<name>.json). Then `mirror --name platform`
-  or `apply --name platform ...`. `goldfinger selections` lists them. --name and
+  (~/.config/trailboss/selections/<name>.json). Then `mirror --name platform`
+  or `apply --name platform ...`. `trailboss selections` lists them. --name and
   --selection are mutually exclusive.
 
 WORKSPACE LIFECYCLE (workspaces list | prune)
   Every `mirror --purpose` leaves a timestamped snapshot dir under the workspace
-  root (default ~/goldfinger); goldfinger never deletes them for you, so they
+  root (default ~/trailboss); trailboss never deletes them for you, so they
   accumulate. `workspaces` is the safe, first-class way to see and reclaim them.
   It is filesystem-only: it never touches GitHub and runs no git.
-       goldfinger workspaces list          # size + creation time per snapshot
-       goldfinger workspaces list --json   # {version, root, action, workspaces:[…]}
+       trailboss workspaces list          # size + creation time per snapshot
+       trailboss workspaces list --json   # {version, root, action, workspaces:[…]}
   list enumerates only the stamped snapshot dirs (those ending -<stamp>); the
-  default ~/goldfinger/<owner> mirror and any unrelated dir are ignored. A
+  default ~/trailboss/<owner> mirror and any unrelated dir are ignored. A
   snapshot's purpose/branch/owner come from its sidecar manifest when present;
   a legacy manifest-less snapshot is still listed (createdAt recovered from the
   dir-name stamp) but with no structured purpose/branch — the dir name is NOT
   reliably splittable, so don't parse it.
-       goldfinger workspaces prune                      # PREVIEW: shows what it
+       trailboss workspaces prune                      # PREVIEW: shows what it
                                                         # would remove, deletes 0
-       goldfinger workspaces prune --confirm            # actually delete
-       goldfinger workspaces prune --older-than 7d      # only snapshots >7d old
-       goldfinger workspaces prune --purpose keyv-cve   # only that purpose
+       trailboss workspaces prune --confirm            # actually delete
+       trailboss workspaces prune --older-than 7d      # only snapshots >7d old
+       trailboss workspaces prune --purpose keyv-cve   # only that purpose
   prune mirrors apply's posture: it PREVIEWS by default and deletes only with
   --confirm — it never removes a snapshot on its own. Narrow with --older-than
   <dur> and/or --purpose <name>; --older-than takes day/week sugar (7d, 2w) as
@@ -312,7 +312,7 @@ WORKSPACE LIFECYCLE (workspaces list | prune)
 
   Not yet available: a single-branch, full-depth clone (one branch, full history)
   to cut mirror size without the shallow trap. ghorg (as of v1.11.14) exposes no
-  single-branch flag, and goldfinger will not reimplement cloning, so this is
+  single-branch flag, and trailboss will not reimplement cloning, so this is
   deferred pending an upstream ghorg option. For now: --clone-depth 1 (shallow,
   default branch only) is the size lever; omit it for a full clone.
 
@@ -330,7 +330,7 @@ SAFETY — READ THIS
     when you present the dry-run or a real run.
 
 EXIT CODES
-  goldfinger's exit status is a stable contract you can branch on in scripts:
+  trailboss's exit status is a stable contract you can branch on in scripts:
     0  success — the command did its job. In-sync `check`, a completed dry-run,
        a finished mirror, a written selection.
     1  a domain OUTCOME, not a crash — the command ran fine but is reporting a
@@ -341,8 +341,8 @@ EXIT CODES
     2  ERROR — bad flags, no token / auth failure, a missing child tool, an
        unreadable lockfile, or a zero-repo `select` without --allow-empty; also
        `doctor` itself could not run. The message on stderr names the next action.
-  So: `if goldfinger check; then ...` distinguishes 0 (sync) from 1 (drift) from
-  2 (error), and `goldfinger doctor` likewise separates all-clear (0) from a
+  So: `if trailboss check; then ...` distinguishes 0 (sync) from 1 (drift) from
+  2 (error), and `trailboss doctor` likewise separates all-clear (0) from a
   failed check (1) from a doctor that couldn't run (2) — a wrong token trips 2,
   never a false "in sync".
 
@@ -354,37 +354,37 @@ MACHINE-READABLE OUTPUT
   every JSON payload compact (single-line) rather than indented, so an agent
   parsing it spends fewer tokens. The default (no --quiet) stays pretty-printed
   for a human terminal. Only whitespace differs — the shape is identical.
-       goldfinger select --json ...   -> {selectionPath, selection:{…lockfile…}, digest}
-       goldfinger doctor --json       -> {version, checks:[{check, status, detail, fix}]}
-       goldfinger check --json        -> {version, inSync, added, removed, …}
-       goldfinger scan --json ...     -> {version, pattern, workspace, owner, branch?, reposScanned, reposNotScanned, totalMatches, truncated, repos:[…]}
-       goldfinger selections --json   -> {version, selections:[{name, owner, …}]}
-       goldfinger workspaces list --json -> {version, root, action, workspaces:[…]}
-       goldfinger mirror --report-json -> {version, workspace, owner, reconciliation:{inSelection, onDisk, notOnDisk, branch?}, repos, …}
-       goldfinger apply --plan-json ... -> {version, dry_run, sign_mode, repos, …}
-       goldfinger guide --json        -> {version, commands:[{name, flags, …}]}
-       goldfinger schema              -> {version, schemas:{lockfile, check, …}}
+       trailboss select --json ...   -> {selectionPath, selection:{…lockfile…}, digest}
+       trailboss doctor --json       -> {version, checks:[{check, status, detail, fix}]}
+       trailboss check --json        -> {version, inSync, added, removed, …}
+       trailboss scan --json ...     -> {version, pattern, workspace, owner, branch?, reposScanned, reposNotScanned, totalMatches, truncated, repos:[…]}
+       trailboss selections --json   -> {version, selections:[{name, owner, …}]}
+       trailboss workspaces list --json -> {version, root, action, workspaces:[…]}
+       trailboss mirror --report-json -> {version, workspace, owner, reconciliation:{inSelection, onDisk, notOnDisk, branch?}, repos, …}
+       trailboss apply --plan-json ... -> {version, dry_run, sign_mode, repos, …}
+       trailboss guide --json        -> {version, commands:[{name, flags, …}]}
+       trailboss schema              -> {version, schemas:{lockfile, check, …}}
   Quiet non-JSON stdout contract:
-       goldfinger select --quiet ...   -> lockfile path
-       goldfinger mirror --quiet ...   -> workspace path (empty for a dry-run)
-       goldfinger apply --quiet ...    -> dry-run status digest on stdout (no temp
+       trailboss select --quiet ...   -> lockfile path
+       trailboss mirror --quiet ...   -> workspace path (empty for a dry-run)
+       trailboss apply --quiet ...    -> dry-run status digest on stdout (no temp
                                           file); --plan-json instead -> plan JSON,
                                           digest suppressed; a live run -> empty
-       goldfinger scan --quiet ...     -> empty stdout unless --json (then compact)
-       goldfinger check --quiet        -> empty stdout; exit code carries sync/drift
-       goldfinger doctor --quiet       -> empty stdout; exit code carries pass/fail
-       goldfinger selections --quiet   -> empty stdout unless --json
-       goldfinger workspaces list --quiet -> empty stdout unless --json
+       trailboss scan --quiet ...     -> empty stdout unless --json (then compact)
+       trailboss check --quiet        -> empty stdout; exit code carries sync/drift
+       trailboss doctor --quiet       -> empty stdout; exit code carries pass/fail
+       trailboss selections --quiet   -> empty stdout unless --json
+       trailboss workspaces list --quiet -> empty stdout unless --json
   guide (prose) and schema are already stdout payloads, so --quiet does not
   change WHAT they print — but where they emit JSON (guide --json, and schema,
   which is always JSON), --quiet still compacts it to a single line.
   guide --json is the self-describing CLI catalogue: every command, its flags,
   which flags are required, a flag's enum values (e.g. --sign), and a canonical
-  example per command — discover what goldfinger can do by parsing structure
+  example per command — discover what trailboss can do by parsing structure
   instead of this prose. Names/usage come from the live command tree; requiredness
   and enums are kept in sync with the validators by tests.
   schema is the output-side companion: it prints the JSON Schema (draft 2020-12)
-  for the lockfile and every payload above, so you can VALIDATE what goldfinger
+  for the lockfile and every payload above, so you can VALIDATE what trailboss
   emits — or hand a validator the exact shape — instead of inferring it. It is
   read-only and offline (no token, no network, no git), and its schemas are pinned
   to the Go types by a golden test, so they cannot drift. Where guide --json
@@ -397,7 +397,7 @@ MACHINE-READABLE OUTPUT
   stdout (and the full-output temp file is not written).
   Each payload carries a top-level `version` for shape-stability, except
   `select --json` whose version is the nested selection.version (the lockfile
-  version), so the nested object stays identical to goldfinger.selection on disk.
+  version), so the nested object stays identical to trailboss.selection on disk.
   Failures are one parseable line, never a stack dump: a genuine error collapses
   to a single stderr line — `Error: <msg>` in human mode, or the compact object
   {version, error, exitCode} under --quiet (the `error` surface in schema). A
@@ -406,28 +406,28 @@ MACHINE-READABLE OUTPUT
 
 NOTES FOR AI AGENTS
   - The selection lockfile is JSON — read it directly for structured state.
-  - Run `goldfinger doctor --json` first on an unfamiliar box: it tells you the
+  - Run `trailboss doctor --json` first on an unfamiliar box: it tells you the
     principal, whether the child tools are present, and whether apply will commit
     — a machine-readable go/no-go before you select or apply.
   - Every read command takes --json (doctor/select/check/selections) or --report-json
     (mirror): prefer it over scraping prose. stdout is the data, stderr the noise.
     Add --quiet / -q when you want stderr silenced and stdout reduced to the
     single machine result (or JSON when a JSON flag is also set).
-  - `goldfinger schema` prints the JSON Schema for every one of those payloads —
-    validate goldfinger's output against it rather than guessing field shapes.
+  - `trailboss schema` prints the JSON Schema for every one of those payloads —
+    validate trailboss's output against it rather than guessing field shapes.
   - Before authoring an apply, MIRROR first and READ the real code (Dockerfiles,
     imports, CI configs, etc.). A fleet change script written blind will be wrong
     on the edge cases — the variety across repos is exactly why you inspect a
     local snapshot before fanning out. Mirror with --purpose <name> for an
     ephemeral, timestamped snapshot, read + develop+test the script there, then
     apply (which clones its own copy).
-  - Every error names the next action (e.g. "run goldfinger select first",
+  - Every error names the next action (e.g. "run trailboss select first",
     or an install hint for a missing tool). Follow it.
   - "the repos I mirror" and "the repos I apply to" are the same frozen set,
-    from one lockfile — that is the guarantee goldfinger exists to provide.
-  - If your host speaks MCP, `goldfinger mcp` serves this same read-and-plan
+    from one lockfile — that is the guarantee trailboss exists to provide.
+  - If your host speaks MCP, `trailboss mcp` serves this same read-and-plan
     surface as typed tools over stdio (guide, schema, selections, check, select,
     mirror, scan, workspaces_list, doctor, apply_plan) — call them instead of shelling
     out and parsing text. There is deliberately no `apply` tool: `apply_plan`
-    returns the exact, digest-bound `goldfinger apply` command (dry-run and live
+    returns the exact, digest-bound `trailboss apply` command (dry-run and live
     variants) for a human to run, because opening PRs stays a human action.

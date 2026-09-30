@@ -10,18 +10,18 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/redscaresu/goldfinger/client"
-	"github.com/redscaresu/goldfinger/mirror"
-	"github.com/redscaresu/goldfinger/models"
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/client"
+	"github.com/toxicwind/trailboss/mirror"
+	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/spf13/cobra"
 )
 
-// mcpServerName / mcpServerTitle identify goldfinger to an MCP client in the
+// mcpServerName / mcpServerTitle identify trailboss to an MCP client in the
 // initialize handshake.
 const (
-	mcpServerName  = "goldfinger"
-	mcpServerTitle = "goldfinger"
+	mcpServerName  = "trailboss"
+	mcpServerTitle = "trailboss"
 )
 
 // mcpOutputTailLimit caps how much delegate output a tool result carries back to
@@ -35,14 +35,14 @@ const mcpOutputTailLimit = 8 << 10 // 8 KiB
 func newMCPCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "mcp",
-		Short: "Serve goldfinger's read-and-plan surface to an AI agent over MCP (stdio)",
-		Long: "mcp runs goldfinger as a Model Context Protocol server over stdio, exposing " +
+		Short: "Serve trailboss's read-and-plan surface to an AI agent over MCP (stdio)",
+		Long: "mcp runs trailboss as a Model Context Protocol server over stdio, exposing " +
 			"its read-only and plan-only surface as MCP tools: guide/schema/selections " +
 			"(catalogue and contracts), check/select/mirror (discovery, freezing, and " +
 			"local mirroring), scan (local match search over the mirror), " +
 			"workspaces_list, doctor, and apply_plan.\n\n" +
 			"apply is deliberately NOT a tool. A real apply opens PRs and is the human's " +
-			"to run: apply_plan instead returns the exact, digest-bound `goldfinger apply` " +
+			"to run: apply_plan instead returns the exact, digest-bound `trailboss apply` " +
 			"command (dry-run and live variants) for a human to review and execute. The " +
 			"server never opens PRs and never runs git.\n\n" +
 			"stdin/stdout are the JSON-RPC channel — do not pipe anything else into them. " +
@@ -123,40 +123,40 @@ func newMCPServerWithDeps(d mcpDeps) *mcp.Server {
 	// Read-only, offline catalogue/contract tools.
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "guide",
-		Description: "Return goldfinger's machine-readable capabilities catalogue (the same document as `guide --json`): every command, its flags, required flags, enum values, and a canonical example. Start here to learn the surface.",
-		Annotations: readOnlyLocal("goldfinger guide"),
+		Description: "Return trailboss's machine-readable capabilities catalogue (the same document as `guide --json`): every command, its flags, required flags, enum values, and a canonical example. Start here to learn the surface.",
+		Annotations: readOnlyLocal("trailboss guide"),
 	}, mcpGuideHandler)
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "schema",
-		Description: "Return the JSON Schema for the selection lockfile and every machine-readable payload (the same document as `goldfinger schema`). Use it to validate any goldfinger output offline.",
-		Annotations: readOnlyLocal("goldfinger schema"),
+		Description: "Return the JSON Schema for the selection lockfile and every machine-readable payload (the same document as `trailboss schema`). Use it to validate any trailboss output offline.",
+		Annotations: readOnlyLocal("trailboss schema"),
 	}, mcpSchemaHandler)
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "selections",
 		Description: "List the named selections in the registry with their owner, repo count, digest, and resolved time (the same document as `selections --json`).",
-		Annotations: readOnlyLocal("goldfinger selections"),
+		Annotations: readOnlyLocal("trailboss selections"),
 	}, mcpSelectionsHandler)
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "workspaces_list",
 		Description: "List the ephemeral mirror snapshot workspaces under the workspace root (the same document as `workspaces list --json`). Read-only: it never prunes.",
-		Annotations: readOnlyLocal("goldfinger workspaces list"),
+		Annotations: readOnlyLocal("trailboss workspaces list"),
 	}, mcpWorkspacesListHandler)
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "scan",
 		Description: "Search the mirrored clones of a selection for a regular expression and return a versioned match report (the same document as `scan --json`). It searches ONLY the selected repos already mirrored under the workspace (mirror first) — no git, no network, no token, zero GitHub rate limit. A selected repo not on disk is reported scanned:false (never silently dropped); binary files and symlinks are skipped; a per-repo match cap, an oversize-file skip, or a file/dir that could not be read sets truncated:true.",
-		Annotations: readOnlyLocal("goldfinger scan"),
+		Annotations: readOnlyLocal("trailboss scan"),
 	}, mcpScanHandler)
 
 	// Read-only tools that reach GitHub / the environment.
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "doctor",
 		Description: "Run read-only preflight checks: which token source and GitHub principal a run would use, whether ghorg and multi-gitter are on PATH, and whether a git identity and signing are configured. Never writes to GitHub, never runs git, never prints the token.",
-		Annotations: readOnlyRemote("goldfinger doctor"),
+		Annotations: readOnlyRemote("trailboss doctor"),
 	}, mcpDoctorHandler)
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "check",
 		Description: "Report whether a selection has drifted from live discovery: repos added/removed, default branches moved, owner type flipped. Read-only — it never rewrites the lockfile.",
-		Annotations: readOnlyRemote("goldfinger check"),
+		Annotations: readOnlyRemote("trailboss check"),
 	}, d.mcpCheckHandler)
 
 	// Tools with allowed local side-effects (writing a lockfile, cloning). None
@@ -164,20 +164,20 @@ func newMCPServerWithDeps(d mcpDeps) *mcp.Server {
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "select",
 		Description: "Resolve an owner's repos by topic, all repos, or an explicit set of named repos, and freeze them as a selection lockfile. Writes the lockfile locally; it never writes to GitHub. Returns the written path, the full lockfile, and its repo-set digest.",
-		Annotations: writeLocalRemote("goldfinger select"),
+		Annotations: writeLocalRemote("trailboss select"),
 	}, mcpSelectHandler)
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "mirror",
 		Description: "Clone a frozen selection into a local workspace via ghorg. Local side-effects only (clones on disk); it never writes to GitHub and never runs git itself. Returns the workspace path and a coverage report.",
-		Annotations: writeLocalRemote("goldfinger mirror --purpose <name>"),
+		Annotations: writeLocalRemote("trailboss mirror --purpose <name>"),
 	}, d.mcpMirrorHandler)
 
 	// Plan-only: NEVER opens PRs. Returns the digest-bound apply command for a
 	// human to review and run.
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "apply_plan",
-		Description: "Plan a fleet change WITHOUT running it. Returns the invocation plan (what would run, not a diff) and the exact, digest-bound `goldfinger apply` command — a dry-run variant and a live variant — for a human to review and execute. This tool never opens PRs, never runs multi-gitter, and needs no token: opening PRs is the human's to do.",
-		Annotations: readOnlyLocal("goldfinger apply_plan"),
+		Description: "Plan a fleet change WITHOUT running it. Returns the invocation plan (what would run, not a diff) and the exact, digest-bound `trailboss apply` command — a dry-run variant and a live variant — for a human to review and execute. This tool never opens PRs, never runs multi-gitter, and needs no token: opening PRs is the human's to do.",
+		Annotations: readOnlyLocal("trailboss apply_plan"),
 	}, mcpApplyPlanHandler)
 
 	return srv
@@ -216,7 +216,7 @@ func writeLocalRemote(title string) *mcp.ToolAnnotations {
 // that read an existing lockfile.
 type mcpSelectionRef struct {
 	Name string `json:"name,omitempty" jsonschema:"named selection in the registry (mutually exclusive with path)"`
-	Path string `json:"path,omitempty" jsonschema:"explicit path to the selection lockfile (mutually exclusive with name; default ./goldfinger.selection)"`
+	Path string `json:"path,omitempty" jsonschema:"explicit path to the selection lockfile (mutually exclusive with name; default ./trailboss.selection)"`
 }
 
 // --- guide / schema / selections / workspaces_list -------------------------
@@ -263,7 +263,7 @@ func mcpWorkspacesListHandler(_ context.Context, _ *mcp.CallToolRequest, _ struc
 type mcpScanIn struct {
 	mcpSelectionRef
 	Pattern      string `json:"pattern" jsonschema:"the pattern to search for (required); a regular expression unless fixed_strings is set"`
-	Workspace    string `json:"workspace,omitempty" jsonschema:"workspace the selection was mirrored into (default ~/goldfinger; repos are read from <workspace>/<owner>)"`
+	Workspace    string `json:"workspace,omitempty" jsonschema:"workspace the selection was mirrored into (default ~/trailboss; repos are read from <workspace>/<owner>)"`
 	IgnoreCase   bool   `json:"ignore_case,omitempty" jsonschema:"case-insensitive match"`
 	FixedStrings bool   `json:"fixed_strings,omitempty" jsonschema:"treat the pattern as a literal string, not a regular expression"`
 }
@@ -369,7 +369,7 @@ func mcpSelectHandler(ctx context.Context, _ *mcp.CallToolRequest, in mcpSelectI
 		t:               t,
 		branchesToCheck: in.BranchPresence,
 		selectionPath:   path,
-		tool:            "goldfinger " + version,
+		tool:            "trailboss " + version,
 		source:          source,
 		allowEmpty:      in.AllowEmpty,
 	}
@@ -390,8 +390,8 @@ func mcpSelectHandler(ctx context.Context, _ *mcp.CallToolRequest, in mcpSelectI
 
 type mcpMirrorIn struct {
 	mcpSelectionRef
-	Workspace   string `json:"workspace,omitempty" jsonschema:"absolute workspace dir (default ~/goldfinger); mutually exclusive with purpose"`
-	Purpose     string `json:"purpose,omitempty" jsonschema:"ephemeral, timestamped workspace ~/goldfinger/<purpose>-<stamp>; mutually exclusive with workspace"`
+	Workspace   string `json:"workspace,omitempty" jsonschema:"absolute workspace dir (default ~/trailboss); mutually exclusive with purpose"`
+	Purpose     string `json:"purpose,omitempty" jsonschema:"ephemeral, timestamped workspace ~/trailboss/<purpose>-<stamp>; mutually exclusive with workspace"`
 	Branch      string `json:"branch,omitempty" jsonschema:"checkout this branch in every cloned repo (cannot be combined with clone_depth > 0)"`
 	Concurrency int    `json:"concurrency,omitempty" jsonschema:"concurrent clones (0 = ghorg default)"`
 	CloneDepth  int    `json:"clone_depth,omitempty" jsonschema:"shallow clone depth (0 = full history); incompatible with branch"`
@@ -524,7 +524,7 @@ type mcpApplyPlanIn struct {
 }
 
 // mcpCommand is a runnable command in both machine (argv) and human (display)
-// form. argv is the exact, full command — argv[0] is "goldfinger", then its args,
+// form. argv is the exact, full command — argv[0] is "trailboss", then its args,
 // including the operator's own script after "--" — so a client can exec it
 // verbatim. display is the same command shell-quoted for a human to read/paste;
 // the two never diverge.
@@ -611,16 +611,16 @@ func mcpApplyPlanHandler(_ context.Context, _ *mcp.CallToolRequest, in mcpApplyP
 	}, nil
 }
 
-// buildApplyArgv assembles the exact, runnable `goldfinger apply ...` argv for a
+// buildApplyArgv assembles the exact, runnable `trailboss apply ...` argv for a
 // plan — argv[0] is the program itself, so a client can exec the argv verbatim
-// (it is not args-to-goldfinger). The selection is pinned by absolute --selection
+// (it is not args-to-trailboss). The selection is pinned by absolute --selection
 // and --expect-selection-sha256, so the command a human runs is provably the one
 // the plan describes. live adds the real-run guards (--dry-run=false --confirm);
 // without them the command is a dry-run (apply's default). The operator's script
 // goes last after "--", exactly as supplied.
 func buildApplyArgv(spec models.ApplySpec, selectionPath, digest string, live bool) []string {
 	argv := []string{
-		"goldfinger",
+		"trailboss",
 		"apply",
 		"--selection", selectionPath,
 		"--expect-selection-sha256", digest,

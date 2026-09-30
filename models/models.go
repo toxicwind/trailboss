@@ -1,5 +1,5 @@
-// Package models holds the domain types shared across goldfinger's packages.
-// It has no dependencies on other goldfinger packages.
+// Package models holds the domain types shared across trailboss's packages.
+// It has no dependencies on other trailboss packages.
 package models
 
 import "time"
@@ -40,12 +40,12 @@ func (r Repo) RecordedBranch(branch string) (has, known bool) {
 	return has, known
 }
 
-// TokenEnvVar is the environment variable goldfinger reads the operator's
-// GitHub PAT from. goldfinger maps it onto each child tool's own token variable
+// TokenEnvVar is the environment variable trailboss reads the operator's
+// GitHub PAT from. trailboss maps it onto each child tool's own token variable
 // (GITHUB_TOKEN, GHORG_GITHUB_TOKEN) and strips it from the child environment,
 // so the raw PAT never reaches a delegate or a user-supplied apply script under
 // this name.
-const TokenEnvVar = "GOLD_FINGER_PAT"
+const TokenEnvVar = "TRAILBOSS_PAT"
 
 // Owner types as reported by the GitHub API and stored in a Selection.
 const (

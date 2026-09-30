@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/redscaresu/goldfinger/models"
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -260,7 +260,7 @@ func TestRunScanQuietStdoutIsPureJSON(t *testing.T) {
 func TestScanCommandEndToEnd(t *testing.T) {
 	ws := t.TempDir()
 	mkClone(t, ws, "acme", "a", map[string]string{"Dockerfile": "FROM debian:bullseye\n"})
-	selPath := filepath.Join(t.TempDir(), "goldfinger.selection")
+	selPath := filepath.Join(t.TempDir(), "trailboss.selection")
 	require.NoError(t, selection.Write(selPath, scanSelection("acme", "a"), selection.WriteOptions{Overwrite: true}))
 
 	// executeCmd merges stdout+stderr into one buffer; --quiet suppresses the

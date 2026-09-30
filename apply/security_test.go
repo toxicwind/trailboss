@@ -12,7 +12,7 @@ import (
 )
 
 // securityTest marks a test (or fuzz target) as one that locks a security
-// invariant of goldfinger. It is a no-op at runtime; its only purpose is
+// invariant of trailboss. It is a no-op at runtime; its only purpose is
 // discoverability, so an auditor can list every security invariant test without
 // trusting a curated list — grep the call sites (not the two `func securityTest`
 // definitions):

@@ -1,4 +1,4 @@
-// Package selection reads and writes the goldfinger selection lockfile — the
+// Package selection reads and writes the trailboss selection lockfile — the
 // frozen, reviewable set of repos that both `mirror` and `apply` consume.
 package selection
 
@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 )
 
 // segmentPattern is the grammar a lockfile owner or repo name must match to be a
@@ -143,10 +143,10 @@ func Read(path string) (models.Selection, error) {
 // between, which is what makes `apply --expect-selection-sha256` a real binding
 // and not a best-effort guess.
 func ReadWithDigest(path string) (models.Selection, string, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // G304: path is the selection lockfile location goldfinger resolves (a named selection under its config dir or an explicit --selection path); reading the operator's own lockfile is the point.
+	data, err := os.ReadFile(path) //nolint:gosec // G304: path is the selection lockfile location trailboss resolves (a named selection under its config dir or an explicit --selection path); reading the operator's own lockfile is the point.
 	if err != nil {
 		if os.IsNotExist(err) {
-			return models.Selection{}, "", fmt.Errorf("no selection at %s — run `goldfinger select` first", path)
+			return models.Selection{}, "", fmt.Errorf("no selection at %s — run `trailboss select` first", path)
 		}
 		return models.Selection{}, "", fmt.Errorf("read selection: %w", err)
 	}
@@ -164,13 +164,13 @@ func parseSelection(data []byte, path string) (models.Selection, error) {
 	if err := json.Unmarshal(data, &s); err != nil {
 		return models.Selection{}, fmt.Errorf("parse selection %s: %w", path, err)
 	}
-	// Accept every schema version this goldfinger can read. A v1 lockfile has no
+	// Accept every schema version this trailboss can read. A v1 lockfile has no
 	// branch-presence metadata; it migrates in memory to empty branch facts,
 	// which read back as "unknown" (RecordedBranch) — never guessed.
 	switch s.Version {
 	case 1, models.SelectionVersion:
 	default:
-		return models.Selection{}, fmt.Errorf("selection %s has unsupported version %d (this goldfinger understands versions 1..%d)", path, s.Version, models.SelectionVersion)
+		return models.Selection{}, fmt.Errorf("selection %s has unsupported version %d (this trailboss understands versions 1..%d)", path, s.Version, models.SelectionVersion)
 	}
 	// The owner and every repo name are used as path segments when a consumer
 	// joins a clone location (<workspace>/<owner>/<name> in mirror and scan). A
@@ -231,16 +231,16 @@ func isPathSegment(s string) bool {
 }
 
 // Dir is the directory holding named selections. It honours XDG_CONFIG_HOME,
-// falling back to ~/.config/goldfinger/selections (matching ghorg's convention).
+// falling back to ~/.config/trailboss/selections (matching ghorg's convention).
 func Dir() (string, error) {
 	if x := os.Getenv("XDG_CONFIG_HOME"); x != "" {
-		return filepath.Join(x, "goldfinger", "selections"), nil
+		return filepath.Join(x, "trailboss", "selections"), nil
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("resolve home dir: %w", err)
 	}
-	return filepath.Join(home, ".config", "goldfinger", "selections"), nil
+	return filepath.Join(home, ".config", "trailboss", "selections"), nil
 }
 
 // PathForName maps a named selection to its lockfile path under Dir().

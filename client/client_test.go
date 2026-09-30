@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/go-github/v89/github"
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

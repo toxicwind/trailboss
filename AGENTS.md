@@ -5,37 +5,37 @@ this file, so Claude Code reads exactly the same content — one source of truth
 
 ## Two audiences — don't confuse them
 
-- **Operating goldfinger** (running the CLI, in this repo or elsewhere): run
-  `goldfinger guide` for the operator playbook, or read `cmd/guide.md`. Do **not**
+- **Operating trailboss** (running the CLI, in this repo or elsewhere): run
+  `trailboss guide` for the operator playbook, or read `cmd/guide.md`. Do **not**
   rely on this file for usage. One convention worth knowing up front: when you're
   developing a fleet change, `mirror --purpose <name>` (optionally `--branch
-  <b>`) into a fresh, timestamped `~/goldfinger/<purpose>[-<branch>]-<stamp>`
+  <b>`) into a fresh, timestamped `~/trailboss/<purpose>[-<branch>]-<stamp>`
   snapshot to read and test against — each run gets its own pristine dir,
-  goldfinger never deletes it, so you clean it up when done. `mirror` prints that
+  trailboss never deletes it, so you clean it up when done. `mirror` prints that
   resolved workspace path as a bare line on stdout (banners/ghorg output go to
   stderr), so capture it rather than globbing for the stamped dir. One gotcha:
   `--branch` and `--clone-depth` are incompatible (a shallow clone only fetches
   each repo's default branch, so `--branch dev --clone-depth 1` would silently
-  skip `dev` wherever it isn't the default) — goldfinger refuses the combo; omit
+  skip `dev` wherever it isn't the default) — trailboss refuses the combo; omit
   `--clone-depth` when mirroring a non-default branch. Full recipe in
-  `goldfinger guide`.
-- **Changing goldfinger's code** (you are here): read `README.md` first for the
+  `trailboss guide`.
+- **Changing trailboss's code** (you are here): read `README.md` first for the
   product design and rationale, then follow the rules below.
 
-## What goldfinger is
+## What trailboss is
 
 An orchestration layer. It resolves a repo selection (org/user + topic), freezes
 it as a JSON lockfile, then delegates: **ghorg** mirrors the selection locally,
-**multi-gitter** applies changes and opens PRs. goldfinger owns the *selection*;
+**multi-gitter** applies changes and opens PRs. trailboss owns the *selection*;
 it does not reimplement mirroring or PR-fanout.
 
 ## Hard rules
 
-- goldfinger **never writes to GitHub and never runs `git` itself.** Discovery is
+- trailboss **never writes to GitHub and never runs `git` itself.** Discovery is
   read-only REST; mirroring is ghorg; commits/pushes/PRs are multi-gitter. Adding
   a `git` exec or a PR-create call means you're reinventing a delegated tool —
   stop.
-- A real (non-dry-run) `goldfinger apply` opens PRs and must never happen on an
+- A real (non-dry-run) `trailboss apply` opens PRs and must never happen on an
   agent's own initiative or by accident. `apply` defaults to dry-run; a real run
   additionally needs `--dry-run=false --confirm`. An agent may perform the real
   run **only when the human has explicitly authorized this specific fleet
@@ -53,7 +53,7 @@ it does not reimplement mirroring or PR-fanout.
   from the lockfile alone (no `git`, no re-discovery): branch presence is a fact
   **recorded at selection time** (`select --branch-presence`) and can drift, so a
   branch never checked reports `unknown` — do not add code that guesses it.
-- `goldfinger scan` (cmd/scan.go, cmd/scan_search.go) is the read counterpart to
+- `trailboss scan` (cmd/scan.go, cmd/scan_search.go) is the read counterpart to
   `apply`: it searches the clones `mirror` already put on disk and never touches
   GitHub. It reads the **lockfile** for its repo set (never re-discovery) and
   searches **only** those repos under the workspace — the same provable-same-set
@@ -67,7 +67,7 @@ it does not reimplement mirroring or PR-fanout.
   content scan here — reading via the mirror instead of the API is the point.
 - Tokens go to child tools via their env vars (`GHORG_GITHUB_TOKEN`,
   `GITHUB_TOKEN`), never argv. Tests assert no token appears in argv.
-- `goldfinger mcp` (cmd/mcp.go) serves goldfinger's **read-and-plan** surface over
+- `trailboss mcp` (cmd/mcp.go) serves trailboss's **read-and-plan** surface over
   MCP on stdio as thin adapters over the existing report cores (no logic of its
   own). It must stay read-and-plan: there is deliberately **no `apply` tool** —
   `apply_plan` returns the digest-bound `apply` command for a human to run, and
@@ -79,7 +79,7 @@ it does not reimplement mirroring or PR-fanout.
   for this (issue #58).
 - The machine surfaces are self-describing and must stay honest: `guide --json`
   is the input catalogue (kept in sync with the validators by tests) and
-  `goldfinger schema` is the output contract — hand-authored JSON Schema for the
+  `trailboss schema` is the output contract — hand-authored JSON Schema for the
   lockfile and every payload, pinned to the Go structs by a golden file **and** a
   reflection test (`properties` = the struct's json fields; `required` = its
   non-omitempty fields). Change a payload's shape and you must regenerate the

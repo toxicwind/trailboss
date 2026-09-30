@@ -13,24 +13,24 @@ import (
 // Human-readable labels for where a resolved token came from, surfaced to the
 // user so it's obvious which credential a run is using.
 const (
-	tokenSourceEnv = "GOLD_FINGER_PAT"
+	tokenSourceEnv = "TRAILBOSS_PAT"
 	tokenSourceGh  = "local gh session (gh auth token)"
 )
 
 // ghAuthTimeout bounds the `gh auth token` call so a wedged gh (e.g. a stuck
-// keychain prompt) can't hang goldfinger indefinitely.
+// keychain prompt) can't hang trailboss indefinitely.
 const ghAuthTimeout = 5 * time.Second
 
 // ghTokenLookup resolves a token from the local GitHub CLI session. It is a var
 // so tests can stub it; in production it points at the real gh CLI.
 var ghTokenLookup = ghAuthToken
 
-// resolveToken finds the GitHub token goldfinger uses for API discovery and
+// resolveToken finds the GitHub token trailboss uses for API discovery and
 // hands to its child tools, and reports which source it came from. Precedence:
 //
-//  1. GOLD_FINGER_PAT — explicit, and the path CI uses (a PAT stored as a secret).
+//  1. TRAILBOSS_PAT — explicit, and the path CI uses (a PAT stored as a secret).
 //  2. the local GitHub CLI session (`gh auth token`) — so someone already
-//     `gh auth login`'d needs no PAT at all; goldfinger rides their gh auth.
+//     `gh auth login`'d needs no PAT at all; trailboss rides their gh auth.
 //
 // It returns an error naming both options when neither yields a token.
 func resolveToken(ctx context.Context) (token, source string, err error) {
@@ -40,15 +40,15 @@ func resolveToken(ctx context.Context) (token, source string, err error) {
 	if t, ok := ghTokenLookup(ctx); ok {
 		return t, tokenSourceGh, nil
 	}
-	return "", "", fmt.Errorf("no GitHub token found: set %s (e.g. a PAT, as CI does), or run `gh auth login` so goldfinger can use your local GitHub CLI session", tokenEnvVar)
+	return "", "", fmt.Errorf("no GitHub token found: set %s (e.g. a PAT, as CI does), or run `gh auth login` so trailboss can use your local GitHub CLI session", tokenEnvVar)
 }
 
-// ambientTokenVars are env vars that gh (and therefore goldfinger's `gh auth
+// ambientTokenVars are env vars that gh (and therefore trailboss's `gh auth
 // token` fallback) silently honours, shadowing a stored gh login. A stray one of
-// these — common in CI or a shell rc — can make goldfinger authenticate as an
+// these — common in CI or a shell rc — can make trailboss authenticate as an
 // unexpected identity, which then surfaces as a confusing empty/partial result
-// rather than an obvious auth error. GOLD_FINGER_PAT is deliberately not here: it
-// is goldfinger's own explicit, documented input, not a stray shadow.
+// rather than an obvious auth error. TRAILBOSS_PAT is deliberately not here: it
+// is trailboss's own explicit, documented input, not a stray shadow.
 var ambientTokenVars = []string{"GITHUB_TOKEN", "GH_TOKEN"}
 
 // announceTokenSource tells the user which credential the run is using, so the
@@ -61,12 +61,12 @@ func announceTokenSource(w io.Writer, source string) {
 	}
 }
 
-// ambientTokenWarning returns a warning when goldfinger resolved its token from
+// ambientTokenWarning returns a warning when trailboss resolved its token from
 // the local gh session AND an ambient GITHUB_TOKEN/GH_TOKEN is set — because
 // `gh auth token` may then be returning that ambient token instead of the stored
-// login, so goldfinger could be acting as an unexpected identity. It returns ""
-// when the token came from GOLD_FINGER_PAT (the ambient var is irrelevant to
-// goldfinger's own resolution there) or when no ambient var is set.
+// login, so trailboss could be acting as an unexpected identity. It returns ""
+// when the token came from TRAILBOSS_PAT (the ambient var is irrelevant to
+// trailboss's own resolution there) or when no ambient var is set.
 func ambientTokenWarning(source string) string {
 	if source != tokenSourceGh {
 		return ""
@@ -80,7 +80,7 @@ func ambientTokenWarning(source string) string {
 	if len(present) == 0 {
 		return ""
 	}
-	return fmt.Sprintf("auth: warning: %s set in the environment — `gh auth token` may be using it instead of your stored gh login, so goldfinger could be authenticating as an unexpected identity. If discovery resolves the wrong repos (or none), unset it or set %s explicitly.",
+	return fmt.Sprintf("auth: warning: %s set in the environment — `gh auth token` may be using it instead of your stored gh login, so trailboss could be authenticating as an unexpected identity. If discovery resolves the wrong repos (or none), unset it or set %s explicitly.",
 		strings.Join(present, "/"), tokenEnvVar)
 }
 
@@ -120,7 +120,7 @@ func ghAuthToken(ctx context.Context) (string, bool) {
 	ctx, cancel := context.WithTimeout(ctx, ghAuthTimeout)
 	defer cancel()
 	// Route through the stdio-safe bounded runner: resolveToken (and thus this
-	// fallback) runs even while goldfinger serves MCP, where a raw
+	// fallback) runs even while trailboss serves MCP, where a raw
 	// exec.Command().Output() is unsafe — the timeout kills only the direct `gh`
 	// process, so a spawned gh helper/grandchild holding stdout open could wedge
 	// the long-lived server. mcpProbe kills the whole process group on cancel,

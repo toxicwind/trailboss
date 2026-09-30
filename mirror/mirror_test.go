@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ func userSelection() models.Selection {
 		Owner:     "redscaresu",
 		OwnerType: models.OwnerUser,
 		Repos: []models.Repo{
-			{Owner: "redscaresu", Name: "goldfinger"},
+			{Owner: "redscaresu", Name: "trailboss"},
 			{Owner: "redscaresu", Name: "simpleAPI"},
 		},
 	}
@@ -80,7 +80,7 @@ func TestMirrorWritesRepoNames(t *testing.T) {
 		return nil
 	}
 	require.NoError(t, Mirror(context.Background(), run, userSelection(), "tok", Options{}))
-	assert.Equal(t, "goldfinger\nsimpleAPI\n", gotNames)
+	assert.Equal(t, "trailboss\nsimpleAPI\n", gotNames)
 }
 
 func TestMirrorOverridesExistingToken(t *testing.T) {
@@ -133,7 +133,7 @@ func TestMirrorNeutralisesAmbientConfig(t *testing.T) {
 
 func TestMirrorStripsSourcePATFromChildEnv(t *testing.T) {
 	securityTest(t)
-	t.Setenv(models.TokenEnvVar, "raw-pat") // operator's exported GOLD_FINGER_PAT
+	t.Setenv(models.TokenEnvVar, "raw-pat") // operator's exported TRAILBOSS_PAT
 	var cap capture
 	require.NoError(t, Mirror(context.Background(), cap.run, userSelection(), "mapped-token", Options{}))
 
@@ -146,7 +146,7 @@ func TestMirrorStripsSourcePATFromChildEnv(t *testing.T) {
 
 func TestMirrorPinsLayoutAgainstHostConfig(t *testing.T) {
 	securityTest(t)
-	// The layout <workspace>/<owner>/<repo> is what goldfinger prints, reports, and
+	// The layout <workspace>/<owner>/<repo> is what trailboss prints, reports, and
 	// reconciles against, so every ghorg knob that could move clones must be both
 	// pinned in argv (a CLI flag overrides env AND config) and scrubbed from the
 	// child env. Setting all of them here must not change the resulting layout.

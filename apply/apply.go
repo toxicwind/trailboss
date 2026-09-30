@@ -1,5 +1,5 @@
 // Package apply runs a change across a selection by shelling out to
-// multi-gitter. goldfinger owns the selection; multi-gitter owns the
+// multi-gitter. trailboss owns the selection; multi-gitter owns the
 // clone→script→commit→push→PR.
 package apply
 
@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 )
 
 // tokenEnv is the environment variable multi-gitter reads its GitHub PAT from.
@@ -30,7 +30,7 @@ const maxRepos = 1000
 // dispatch a multi-gitter invocation without multi-gitter installed in tests.
 type Runner func(ctx context.Context, name string, args, env []string) ([]byte, error)
 
-// Result is the observable output from an apply run that goldfinger owns. For a
+// Result is the observable output from an apply run that trailboss owns. For a
 // dry-run it carries the combined output captured from multi-gitter so cmd/ can
 // summarize it honestly; live runs stream and usually leave Output nil.
 type Result struct {
@@ -70,8 +70,8 @@ func Apply(ctx context.Context, run Runner, s models.Selection, spec models.Appl
 
 	// Point multi-gitter at an empty config file so its default config-file
 	// discovery (which can carry its own repo/org selection and filters) can't
-	// override the exact lockfile set goldfinger passes as --repo flags.
-	configPath, cfgCleanup, err := writeEmptyFile("goldfinger-mg-config-*.yaml")
+	// override the exact lockfile set trailboss passes as --repo flags.
+	configPath, cfgCleanup, err := writeEmptyFile("trailboss-mg-config-*.yaml")
 	if err != nil {
 		return Result{}, err
 	}
@@ -185,7 +185,7 @@ func signArgs(mode string) []string {
 		// git honours the operator's ~/.gitconfig commit.gpgsign / user.signingkey
 		// and signs with their own GPG key. Verified empirically against v0.63.1.
 		//
-		// This holds ONLY because goldfinger never passes --author-name /
+		// This holds ONLY because trailboss never passes --author-name /
 		// --author-email: multi-gitter reduces the commit's env to just
 		// GIT_AUTHOR/COMMITTER_* when an author is set, stripping HOME/GPG_TTY and
 		// breaking signing. Do not add author flags to buildArgs without
@@ -201,7 +201,7 @@ func signArgs(mode string) []string {
 // multi-gitter takes a script *path* (which it runs in each repo's checkout),
 // not an inline command with arguments.
 func writeScript(cmd []string) (path string, cleanup func(), err error) {
-	f, err := os.CreateTemp("", "goldfinger-apply-*.sh")
+	f, err := os.CreateTemp("", "trailboss-apply-*.sh")
 	if err != nil {
 		return "", nil, fmt.Errorf("create script: %w", err)
 	}

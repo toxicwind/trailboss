@@ -27,7 +27,7 @@ help:
 	@echo "  lint    golangci-lint (gosec + staticcheck), same config as CI's lint job"
 	@echo "  check   build + test + lint"
 	@echo "  repro   Rebuild a released tag reproducibly and print its sha256 (VERSION=vX.Y.Z)"
-	@echo "  e2e     Full-pipeline e2e against the sandbox repo (needs GOLD_FINGER_PAT + gh)"
+	@echo "  e2e     Full-pipeline e2e against the sandbox repo (needs TRAILBOSS_PAT + gh)"
 	@echo "  hooks   Install the gitleaks pre-commit hook into .git/hooks"
 	@echo "  clean   Remove build artifacts"
 

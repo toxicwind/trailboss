@@ -1,4 +1,4 @@
-module github.com/redscaresu/goldfinger
+module github.com/toxicwind/trailboss
 
 go 1.26.6
 

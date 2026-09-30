@@ -8,7 +8,7 @@ import (
 )
 
 // guideText is the operator playbook, embedded so it ships with the binary and
-// is reachable at runtime by any agent driving goldfinger, wherever it runs.
+// is reachable at runtime by any agent driving trailboss, wherever it runs.
 //
 //go:embed guide.md
 var guideText string
@@ -17,7 +17,7 @@ func newGuideCmd() *cobra.Command {
 	var asJSON bool
 	cmd := &cobra.Command{
 		Use:   "guide",
-		Short: "Print an operator playbook for humans and AI agents driving goldfinger",
+		Short: "Print an operator playbook for humans and AI agents driving trailboss",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if asJSON {
 				// The machine-consumable CLI catalogue is derived from the live

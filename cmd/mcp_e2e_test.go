@@ -10,28 +10,28 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// buildGoldfingerBinary compiles the real goldfinger binary to a temp path so the
+// buildTrailbossBinary compiles the real trailboss binary to a temp path so the
 // e2e can launch it as a child process. -mod=readonly matches how CI and the
 // Makefile build; the module cache is already populated, so this stays offline.
-func buildGoldfingerBinary(t *testing.T) string {
+func buildTrailbossBinary(t *testing.T) string {
 	t.Helper()
-	bin := filepath.Join(t.TempDir(), "goldfinger")
+	bin := filepath.Join(t.TempDir(), "trailboss")
 	if runtime.GOOS == "windows" {
 		bin += ".exe"
 	}
 	out, err := exec.Command("go", "build", "-mod=readonly", "-o", bin,
-		"github.com/redscaresu/goldfinger/cmd").CombinedOutput()
-	require.NoErrorf(t, err, "build goldfinger: %s", out)
+		"github.com/toxicwind/trailboss/cmd").CombinedOutput()
+	require.NoErrorf(t, err, "build trailboss: %s", out)
 	return bin
 }
 
 // TestMCPServerSubprocessSpeaksCleanStdioJSONRPC is the Tier-3 e2e: it launches the
-// real `goldfinger mcp` binary and drives it over its ACTUAL stdin/stdout pipes.
+// real `trailboss mcp` binary and drives it over its ACTUAL stdin/stdout pipes.
 //
 // This guards the server's single most important invariant — that nothing but
 // JSON-RPC ever reaches the process's real stdout — which the in-memory transport
@@ -49,7 +49,7 @@ func TestMCPServerSubprocessSpeaksCleanStdioJSONRPC(t *testing.T) {
 	if testing.Short() {
 		t.Skip("builds a binary and spawns a subprocess; skipped in -short")
 	}
-	bin := buildGoldfingerBinary(t)
+	bin := buildTrailbossBinary(t)
 	selPath, _ := writeTestSelection(t) // fixture for the apply_plan call below.
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -109,7 +109,7 @@ func TestMCPServerSubprocessSpeaksCleanStdioJSONRPC(t *testing.T) {
 		// deterministic and offline (no mirror needed) while still driving the handler.
 		{name: "scan", args: map[string]any{
 			"path":      selPath,
-			"pattern":   "goldfinger",
+			"pattern":   "trailboss",
 			"workspace": t.TempDir(),
 		}},
 		{name: "apply_plan", args: map[string]any{

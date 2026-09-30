@@ -14,7 +14,7 @@
 # so the sandbox and home dir are left exactly as they started.
 #
 # NOT part of CI: it needs a real PAT and opens a real PR. Run it locally:
-#   GOLD_FINGER_PAT=<pat> make e2e
+#   TRAILBOSS_PAT=<pat> make e2e
 #
 # Requirements: go, gh (authenticated), jq, git. The sandbox repo must be tagged
 # with the topic below and seeded with a README.md on its default branch.
@@ -25,7 +25,7 @@ REPO="${E2E_REPO:-goldfinger-test}"
 TOPIC="${E2E_TOPIC:-goldfinger-e2e}"
 MARKER="goldfinger e2e marker"
 
-: "${GOLD_FINGER_PAT:?GOLD_FINGER_PAT must be set (the PAT goldfinger uses)}"
+: "${TRAILBOSS_PAT:?TRAILBOSS_PAT must be set (the PAT goldfinger uses)}"
 for tool in go gh jq git; do
 	command -v "$tool" >/dev/null || { echo "FAIL: $tool is required" >&2; exit 1; }
 done
@@ -83,7 +83,7 @@ echo "==> mirror"
 
 echo "==> mirror --purpose (ephemeral, timestamped <home>/goldfinger/<purpose>-<stamp>)"
 mkdir -p "$PHOME"
-# GOLD_FINGER_PAT is set, so goldfinger/ghorg get the token from env (not gh),
+# TRAILBOSS_PAT is set, so goldfinger/ghorg get the token from env (not gh),
 # and a clone needs no git identity — HOME can safely point at the temp dir.
 HOME="$PHOME" "$GF" mirror --selection "$SELECTION" --purpose "$PURPOSE" >/dev/null
 # goldfinger stamps the time to the millisecond, so we can't predict the exact

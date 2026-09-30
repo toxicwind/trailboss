@@ -6,7 +6,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/spf13/cobra"
 )
 
@@ -77,7 +77,7 @@ func runSelections(names []string, opts selectionsOptions, out, errOut io.Writer
 // "(unreadable)" rather than aborting the listing.
 func renderSelectionsTable(out, errOut io.Writer, names []string) error {
 	if len(names) == 0 {
-		fmt.Fprintln(errOut, "no named selections yet — create one with: goldfinger select --name <name> ...")
+		fmt.Fprintln(errOut, "no named selections yet — create one with: trailboss select --name <name> ...")
 		return nil
 	}
 	tw := tabwriter.NewWriter(out, 0, 2, 2, ' ', 0)

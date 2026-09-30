@@ -115,7 +115,7 @@ func TestRunDoctorAmbientShadowWarns(t *testing.T) {
 }
 
 func TestRunDoctorNoShadowWhenPAT(t *testing.T) {
-	// Even with an ambient token present, a GOLD_FINGER_PAT source is unaffected.
+	// Even with an ambient token present, a TRAILBOSS_PAT source is unaffected.
 	t.Setenv("GITHUB_TOKEN", "ambient-value")
 	out, _, err := runDoctorCapture(t, okDeps(), false)
 	require.NoError(t, err)

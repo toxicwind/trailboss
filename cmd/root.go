@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +14,7 @@ const tokenEnvVar = models.TokenEnvVar
 
 func newRootCmd() *cobra.Command {
 	root := &cobra.Command{
-		Use:     "goldfinger",
+		Use:     "trailboss",
 		Short:   "Fan out changes across GitHub repos at scale",
 		Version: version,
 		// Validation errors are actionable on their own; don't bury them

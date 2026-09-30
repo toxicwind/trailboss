@@ -69,7 +69,7 @@ func mcpDelegate(ctx context.Context, name string, args, env []string, token str
 // mcpProbe runs a short helper command and returns ONLY its stdout, bounded, with
 // the same stdio-safety lifecycle guards as mcpRun (no stdin, own process group
 // killed as a whole on context-cancel, bounded Wait). It exists for the preflight
-// probes — a tool `version` line, `gh auth token` — that goldfinger runs even
+// probes — a tool `version` line, `gh auth token` — that trailboss runs even
 // while serving MCP, where a raw exec.Command().Output() would be unsafe: the
 // context kills only the direct child, so a spawned helper/grandchild holding the
 // output pipe open could wedge the long-lived server, and unbounded output could

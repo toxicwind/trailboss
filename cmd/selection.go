@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/spf13/cobra"
 )
 
@@ -12,8 +12,8 @@ import (
 // mirror, apply, and check.
 func addSelectionFlags(cmd *cobra.Command, name, path *string) {
 	f := cmd.Flags()
-	f.StringVar(name, "name", "", "named selection in the registry (~/.config/goldfinger/selections)")
-	f.StringVar(path, "selection", "", "explicit path to the selection lockfile (default ./goldfinger.selection)")
+	f.StringVar(name, "name", "", "named selection in the registry (~/.config/trailboss/selections)")
+	f.StringVar(path, "selection", "", "explicit path to the selection lockfile (default ./trailboss.selection)")
 }
 
 // resolveSelectionPath turns the --name / --selection flags into the lockfile

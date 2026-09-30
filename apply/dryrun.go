@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 )
 
 const (
@@ -129,7 +129,7 @@ func parseDryRunLine(line string, index map[string]int, statuses []RepoDryRunSta
 }
 
 // dryRunBucket maps a multi-gitter section header to a per-repo status. known is
-// true only for the headers goldfinger recognises by name (the successful-run and
+// true only for the headers trailboss recognises by name (the successful-run and
 // no-change sections); any other header falls to the error bucket AND reports
 // known=false, which SummarizeDryRunOutput uses to detect a wholesale format
 // drift (see its fail-safe). multi-gitter groups errored repos under the error

@@ -13,7 +13,7 @@ import (
 // will actually reach multi-gitter's temporary checkouts: system + global + env,
 // but NOT the caller's local .git/config (multi-gitter clones each repo into its
 // own checkout, so a local identity does not propagate). It exists because the
-// charter forbids goldfinger from running `git` itself (AGENTS.md) — doctor must
+// charter forbids trailboss from running `git` itself (AGENTS.md) — doctor must
 // therefore parse config files directly.
 //
 // values is keyed by a normalised "section.key" (lowercased section/subsection and
@@ -214,7 +214,7 @@ func applyEnvInjectedConfig(cfg *gitConfig) {
 // quoted values. It intentionally does NOT evaluate include/includeIf — if one is
 // seen, resolution is marked unresolved so doctor can warn rather than mislead.
 func parseGitConfigFile(path string, cfg *gitConfig) error {
-	f, err := os.Open(path) //nolint:gosec // G304: path is a git-config location goldfinger resolves itself (GIT_CONFIG paths / ~/.gitconfig) for read-only doctor inspection, not attacker-controlled.
+	f, err := os.Open(path) //nolint:gosec // G304: path is a git-config location trailboss resolves itself (GIT_CONFIG paths / ~/.gitconfig) for read-only doctor inspection, not attacker-controlled.
 	if err != nil {
 		return err
 	}

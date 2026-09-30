@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redscaresu/goldfinger/mirror"
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/mirror"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +21,7 @@ func TestResolveWorkspaceDefault(t *testing.T) {
 	ws, snap, err := resolveWorkspace("", "", "")
 	require.NoError(t, err)
 	assert.True(t, filepath.IsAbs(ws))
-	assert.True(t, strings.HasSuffix(ws, "goldfinger"))
+	assert.True(t, strings.HasSuffix(ws, "trailboss"))
 	assert.Nil(t, snap, "the default workspace is persistent, not a managed snapshot")
 }
 
@@ -42,10 +42,10 @@ func TestResolveWorkspacePurposeIsTimestamped(t *testing.T) {
 	ws, snap, err := resolveWorkspace("", "keyv-cve", "")
 	require.NoError(t, err)
 	assert.True(t, filepath.IsAbs(ws))
-	// goldfinger stamps the time to the millisecond; the operator supplied only
+	// trailboss stamps the time to the millisecond; the operator supplied only
 	// the purpose, so each run gets its own pristine dir.
-	assert.True(t, strings.HasSuffix(ws, filepath.Join("goldfinger", "keyv-cve-2026-08-04-132045.123")),
-		"want ~/goldfinger/keyv-cve-2026-08-04-132045.123, got %s", ws)
+	assert.True(t, strings.HasSuffix(ws, filepath.Join("trailboss", "keyv-cve-2026-08-04-132045.123")),
+		"want ~/trailboss/keyv-cve-2026-08-04-132045.123, got %s", ws)
 	// A --purpose snapshot carries a manifest matching the stamped dir name (Owner
 	// is filled by the caller from the selection, so it is empty here).
 	require.NotNil(t, snap)
@@ -63,8 +63,8 @@ func TestResolveWorkspacePurposeFoldsInBranch(t *testing.T) {
 	// A branch with a slash must fold into a single safe path segment.
 	ws, snap, err := resolveWorkspace("", "keyv-cve", "feature/x")
 	require.NoError(t, err)
-	assert.True(t, strings.HasSuffix(ws, filepath.Join("goldfinger", "keyv-cve-feature-x-2026-08-04-132045.123")),
-		"want ~/goldfinger/keyv-cve-feature-x-2026-08-04-132045.123, got %s", ws)
+	assert.True(t, strings.HasSuffix(ws, filepath.Join("trailboss", "keyv-cve-feature-x-2026-08-04-132045.123")),
+		"want ~/trailboss/keyv-cve-feature-x-2026-08-04-132045.123, got %s", ws)
 	// The manifest records the REAL branch (slashes intact), not the sanitised
 	// dir-name component — that is the reliability win of the sidecar.
 	require.NotNil(t, snap)
@@ -339,7 +339,7 @@ func TestRunMirrorReport(t *testing.T) {
 
 func TestRunMirrorSurfacesGhorgLogPath(t *testing.T) {
 	sel := models.Selection{Owner: "acme", OwnerType: models.OwnerUser, Repos: []models.Repo{{Owner: "acme", Name: "svc"}}}
-	const logPath = "/tmp/goldfinger-mirror-output-abc.log"
+	const logPath = "/tmp/trailboss-mirror-output-abc.log"
 
 	t.Run("on success the captured log path is announced", func(t *testing.T) {
 		ws := t.TempDir()
@@ -370,7 +370,7 @@ func TestMirrorCmdMissingToken(t *testing.T) {
 	sel := writeSelection(t)
 	_, err := executeCmd(t, "", "mirror", "--selection", sel)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "GOLD_FINGER_PAT")
+	assert.Contains(t, err.Error(), "TRAILBOSS_PAT")
 }
 
 func TestMirrorCmdBranchWithShallowRejectedBeforeToken(t *testing.T) {
@@ -380,5 +380,5 @@ func TestMirrorCmdBranchWithShallowRejectedBeforeToken(t *testing.T) {
 	_, err := executeCmd(t, "", "mirror", "--branch", "dev", "--clone-depth", "1")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "--clone-depth")
-	assert.NotContains(t, err.Error(), "GOLD_FINGER_PAT")
+	assert.NotContains(t, err.Error(), "TRAILBOSS_PAT")
 }

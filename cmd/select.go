@@ -8,15 +8,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redscaresu/goldfinger/client"
-	"github.com/redscaresu/goldfinger/discovery"
-	"github.com/redscaresu/goldfinger/models"
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/client"
+	"github.com/toxicwind/trailboss/discovery"
+	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/spf13/cobra"
 )
 
 // defaultSelectionPath is where the lockfile lives unless --selection overrides.
-const defaultSelectionPath = "goldfinger.selection"
+const defaultSelectionPath = "trailboss.selection"
 
 // repoResolver is the slice of the GitHub client that `select` and `check` need.
 // Defining it here (consumer side) lets the commands' logic be tested with a
@@ -74,7 +74,7 @@ func newSelectCmd() *cobra.Command {
 				t:               t,
 				branchesToCheck: branchesToCheck,
 				selectionPath:   path,
-				tool:            "goldfinger " + version,
+				tool:            "trailboss " + version,
 				source:          source,
 				allowEmpty:      allowEmpty,
 				asJSON:          asJSON,
@@ -113,7 +113,7 @@ type selectOpts struct {
 // selectJSONReport is the --json shape for select: a wrapper carrying the on-disk
 // path plus the full lockfile object exactly as persisted. The lockfile is nested
 // (not flattened) so `selection` is structurally identical to the written
-// goldfinger.selection, and its own `version` field is the payload version — this
+// trailboss.selection, and its own `version` field is the payload version — this
 // is the one machine surface without a separate top-level version (issue #27 §4).
 type selectJSONReport struct {
 	SelectionPath string           `json:"selectionPath"`

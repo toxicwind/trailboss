@@ -3,7 +3,7 @@ package apply
 import (
 	"testing"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/stretchr/testify/assert"
 )
 

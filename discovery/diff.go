@@ -3,7 +3,7 @@ package discovery
 import (
 	"sort"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 )
 
 // Diff is the repo-level drift between a frozen selection and live discovery:
@@ -26,7 +26,7 @@ type Removed struct {
 // BranchChange records a repo whose recorded default branch differs from the
 // live one. This matters because when no global --base-branch is set, apply
 // passes no base to multi-gitter, which then targets each repo's LIVE default
-// branch — so a silent move changes where a PR lands. (goldfinger does not route
+// branch — so a silent move changes where a PR lands. (trailboss does not route
 // on the recorded default itself; resolveBase uses it only for plan/banner text.)
 type BranchChange struct {
 	Repo models.Repo

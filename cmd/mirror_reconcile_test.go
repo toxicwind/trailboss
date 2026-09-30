@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/redscaresu/goldfinger/mirror"
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/mirror"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -196,7 +196,7 @@ func TestReportReconciliationShortfallPointsAtGhorgLog(t *testing.T) {
 
 	var errOut bytes.Buffer
 	rec := reconcile(sel, ws, mirror.Options{})
-	reportReconciliation(&errOut, rec, ws, sel.Owner, "/tmp/goldfinger-mirror-output-xyz.log")
+	reportReconciliation(&errOut, rec, ws, sel.Owner, "/tmp/trailboss-mirror-output-xyz.log")
 	s := errOut.String()
-	assert.Contains(t, s, "check the captured ghorg log for clone errors: /tmp/goldfinger-mirror-output-xyz.log")
+	assert.Contains(t, s, "check the captured ghorg log for clone errors: /tmp/trailboss-mirror-output-xyz.log")
 }

@@ -25,7 +25,7 @@ func TestResolveSelectionPath(t *testing.T) {
 		t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg")
 		p, err := resolveSelectionPath("payments", "")
 		require.NoError(t, err)
-		assert.Equal(t, filepath.FromSlash("/tmp/xdg/goldfinger/selections/payments.json"), p)
+		assert.Equal(t, filepath.FromSlash("/tmp/xdg/trailboss/selections/payments.json"), p)
 	})
 
 	t.Run("name and path are mutually exclusive", func(t *testing.T) {

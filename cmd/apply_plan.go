@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 )
 
 // applyPlan is the --plan-json payload for apply (issue #27 §3): a machine-readable
-// summary of *what goldfinger is about to invoke*, not the resulting diff.
-// goldfinger delegates clone/script/diff to multi-gitter, so the plan deliberately
-// carries only the invocation metadata goldfinger controls — never a diff or
+// summary of *what trailboss is about to invoke*, not the resulting diff.
+// trailboss delegates clone/script/diff to multi-gitter, so the plan deliberately
+// carries only the invocation metadata trailboss controls — never a diff or
 // diffstat, which it cannot know without reimplementing git.
 //
 // Two safety choices are baked into the shape:
@@ -38,7 +38,7 @@ type applyPlan struct {
 
 // applyPlanRepo is the per-repo slice of the plan. BaseBranchRecorded is the
 // lockfile-recorded default (or the explicit --base-branch). When --base-branch is
-// omitted goldfinger passes nothing and multi-gitter targets each repo's *live*
+// omitted trailboss passes nothing and multi-gitter targets each repo's *live*
 // default at run time, which can differ from the recorded value — the field name
 // and docs carry that drift caveat; it is not exact per-repo routing.
 type applyPlanRepo struct {

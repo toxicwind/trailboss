@@ -1,4 +1,4 @@
-// Package client wraps the read-only GitHub API surface goldfinger needs:
+// Package client wraps the read-only GitHub API surface trailboss needs:
 // resolving an owner's repositories for a selection. It is the only package
 // that talks to the GitHub API, and it never mutates — writes are delegated to
 // multi-gitter.
@@ -10,7 +10,7 @@ import (
 	"net/http"
 
 	"github.com/google/go-github/v89/github"
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 )
 
 // perPage is the max page size the REST API allows, minimising round-trips.
@@ -189,4 +189,4 @@ func toRepo(r *github.Repository) models.Repo {
 
 // tokenName is referenced in error messages; kept in sync with the env var
 // the CLI reads.
-const tokenName = "GOLD_FINGER_PAT"
+const tokenName = "TRAILBOSS_PAT"

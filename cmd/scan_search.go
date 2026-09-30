@@ -167,7 +167,7 @@ func (r *repoScan) matchCount() int { return len(r.matches) }
 // the handle, not a best-effort Lstat race. A file we cannot open or stat is a real
 // coverage gap, so it marks the scan truncated rather than being silently dropped.
 func searchFile(root *os.Root, rel string, re *regexp.Regexp, res *repoScan) {
-	f, err := root.Open(rel) //nolint:gosec // G304: rel is a repo-relative entry WalkDir found under root, and root.Open confines the read within the pinned mirror clone — reading the repo content goldfinger was pointed at is the whole purpose of scan.
+	f, err := root.Open(rel) //nolint:gosec // G304: rel is a repo-relative entry WalkDir found under root, and root.Open confines the read within the pinned mirror clone — reading the repo content trailboss was pointed at is the whole purpose of scan.
 	if err != nil {
 		// Unreadable, or a symlink that would escape the mirror tree (root.Open
 		// refuses it): a gap in coverage, not a silent skip.

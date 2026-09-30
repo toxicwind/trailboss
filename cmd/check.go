@@ -6,10 +6,10 @@ import (
 	"io"
 	"time"
 
-	"github.com/redscaresu/goldfinger/client"
-	"github.com/redscaresu/goldfinger/discovery"
-	"github.com/redscaresu/goldfinger/models"
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/client"
+	"github.com/toxicwind/trailboss/discovery"
+	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/spf13/cobra"
 )
 

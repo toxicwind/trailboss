@@ -11,7 +11,7 @@ func TestGuideRenders(t *testing.T) {
 	// guide needs no token and no network.
 	out, err := executeCmd(t, "", "guide")
 	require.NoError(t, err)
-	for _, want := range []string{"select", "mirror", "apply", "dry-run", "GOLD_FINGER_PAT"} {
+	for _, want := range []string{"select", "mirror", "apply", "dry-run", "TRAILBOSS_PAT"} {
 		assert.Contains(t, out, want)
 	}
 	// The shallow-clone-vs---branch gotcha must be documented in the embedded

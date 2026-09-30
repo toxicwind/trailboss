@@ -106,7 +106,7 @@ jobs:
           CGO_ENABLED: 0
         run: |
           mkdir -p dist
-          BINARY_NAME="goldfinger-${GOOS}-${GOARCH}"
+          BINARY_NAME="trailboss-${GOOS}-${GOARCH}"
           go build -mod=readonly -trimpath -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" -o "dist/${BINARY_NAME}" ./cmd
           (cd dist && sha256sum "${BINARY_NAME}" > "${BINARY_NAME}.sha256")
 
@@ -118,8 +118,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${GITHUB_REF_NAME}" \
-            "dist/goldfinger-${{ matrix.goos }}-${{ matrix.goarch }}" \
-            "dist/goldfinger-${{ matrix.goos }}-${{ matrix.goarch }}.sha256" \
+            "dist/trailboss-${{ matrix.goos }}-${{ matrix.goarch }}" \
+            "dist/trailboss-${{ matrix.goos }}-${{ matrix.goarch }}.sha256" \
             --repo "${GITHUB_REPOSITORY}" --clobber
 
   # Combine the per-binary checksums into one SHA256SUMS manifest. Each matrix
@@ -195,7 +195,7 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0 # zizmor: ignore[unpinned-uses]
     with:
       base64-subjects: ${{ needs.checksums.outputs.hashes }}
-      provenance-name: goldfinger.intoto.jsonl
+      provenance-name: trailboss.intoto.jsonl
       upload-assets: true # attach the provenance to this tag's release
       upload-tag-name: ${{ github.ref_name }}
       # Match the release's real draft state (see create-release.is_draft): true on
@@ -220,7 +220,7 @@ jobs:
             --repo "${GITHUB_REPOSITORY}" \
             --draft=false --latest
 
-  # Bump the Homebrew tap so `brew install redscaresu/tap/goldfinger` tracks this
+  # Bump the Homebrew tap so `brew install redscaresu/tap/trailboss` tracks this
   # release. Self-gating: with no HOMEBREW_TAP_TOKEN secret set the step logs a
   # notice and exits 0, so the release never fails on a missing tap. To enable,
   # create the redscaresu/homebrew-tap repo and add a HOMEBREW_TAP_TOKEN secret
@@ -248,23 +248,23 @@ jobs:
           mkdir -p dist
           gh release download "${GITHUB_REF_NAME}" \
             --repo "${GITHUB_REPOSITORY}" --pattern '*.sha256' --dir dist
-          sh packaging/homebrew/bump.sh "${GITHUB_REF_NAME}" dist > goldfinger.rb
+          sh packaging/homebrew/bump.sh "${GITHUB_REF_NAME}" dist > trailboss.rb
           git clone "https://x-access-token:${TAP_TOKEN}@github.com/redscaresu/homebrew-tap.git" tap
           mkdir -p tap/Formula
-          cp goldfinger.rb tap/Formula/goldfinger.rb
+          cp trailboss.rb tap/Formula/trailboss.rb
           cd tap
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/goldfinger.rb
+          git add Formula/trailboss.rb
           if git diff --cached --quiet; then
             echo "Formula already up to date."
             exit 0
           fi
-          git commit -m "goldfinger ${GITHUB_REF_NAME}"
+          git commit -m "trailboss ${GITHUB_REF_NAME}"
           git push
 
   # Smoke-test the published formula the way a user would: tap the real repo and
-  # `brew install redscaresu/tap/goldfinger`. Proves the release asset URL/sha256
+  # `brew install redscaresu/tap/trailboss`. Proves the release asset URL/sha256
   # are correct for macOS, that `depends_on` pulls ghorg + multi-gitter, and that
   # the installed binary reports this tag's version. Runs on macOS (the primary
   # audience). Self-gating like the publish job: with no HOMEBREW_TAP_TOKEN there
@@ -293,8 +293,8 @@ jobs:
           HOMEBREW_NO_AUTO_UPDATE: "1"
           HOMEBREW_NO_INSTALL_CLEANUP: "1"
         run: |
-          brew install redscaresu/tap/goldfinger
-          got="$(goldfinger --version)"
+          brew install redscaresu/tap/trailboss
+          got="$(trailboss --version)"
           echo "installed: ${got}"
           case "${got}" in
             *"${GITHUB_REF_NAME}"*) echo "version matches ${GITHUB_REF_NAME}" ;;

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/redscaresu/goldfinger/models"
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -110,7 +110,7 @@ func TestRunApply(t *testing.T) {
 
 	t.Run("unrecognised output reports unparseable, not a confident per-repo block", func(t *testing.T) {
 		t.Setenv("TMPDIR", t.TempDir())
-		// multi-gitter's block drifts to headers goldfinger doesn't recognise.
+		// multi-gitter's block drifts to headers trailboss doesn't recognise.
 		run := func(_ context.Context, _ string, _, _ []string) ([]byte, error) {
 			return []byte("Changed repositories:\n  acme/a\n"), nil
 		}
@@ -146,7 +146,7 @@ func TestRunApplyQuiet(t *testing.T) {
 		// The full-output temp file is not written under quiet.
 		entries, err := os.ReadDir(tmp)
 		require.NoError(t, err)
-		assert.Empty(t, entries, "quiet dry-run must not leave a goldfinger-apply-output-*.log")
+		assert.Empty(t, entries, "quiet dry-run must not leave a trailboss-apply-output-*.log")
 	})
 
 	t.Run("plan-json emits JSON only", func(t *testing.T) {
@@ -374,7 +374,7 @@ func TestMultiGitterFloorLine(t *testing.T) {
 		line, warn := multiGitterFloorLine("multi-gitter version 0.60.0")
 		require.True(t, warn)
 		assert.True(t, strings.HasPrefix(line, "warning: multi-gitter "), line)
-		assert.Contains(t, line, "below goldfinger's known-good floor "+multiGitterKnownGoodFloor)
+		assert.Contains(t, line, "below trailboss's known-good floor "+multiGitterKnownGoodFloor)
 		assert.Contains(t, line, "upgrade multi-gitter to >= "+multiGitterKnownGoodFloor)
 	})
 
@@ -397,7 +397,7 @@ func TestApplyCmdGuards(t *testing.T) {
 		_, err := executeCmd(t, "", "apply", "--branch", "b", "--commit-message", "m",
 			"--pr-title", "t", "--sign", "none", "--selection", sel, "--", "true")
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "GOLD_FINGER_PAT")
+		assert.Contains(t, err.Error(), "TRAILBOSS_PAT")
 	})
 
 	t.Run("missing script separator", func(t *testing.T) {

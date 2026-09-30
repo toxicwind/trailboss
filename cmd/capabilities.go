@@ -13,7 +13,7 @@ import (
 // when the catalogue's shape changes incompatibly.
 const capabilitiesVersion = 1
 
-// capabilities is the machine-consumable description of goldfinger's CLI surface
+// capabilities is the machine-consumable description of trailboss's CLI surface
 // emitted by `guide --json`. It exists because the prose guide is written for
 // agents, and an agent parses structure far more reliably than prose (issue #30).
 //
@@ -75,7 +75,7 @@ const nameSelectionExclusiveNote = "--name and --selection are mutually exclusiv
 const nameShapeNote = "--name must be a simple registry name: no path separators (/ or \\), and not '.' or '..' (it maps to a file in the selections registry)"
 
 // purposeShapeNote advertises the directory-alphabet validatePurpose enforces
-// (cmd/mirror.go): --purpose becomes a directory under ~/goldfinger, so it must be
+// (cmd/mirror.go): --purpose becomes a directory under ~/trailboss, so it must be
 // a single safe path segment. Guard-tied by the same sync test.
 const purposeShapeNote = "--purpose must be a single safe directory-name segment: only letters, digits, and - _ . (no path separators and no '..')"
 
@@ -85,7 +85,7 @@ const purposeShapeNote = "--purpose must be a single safe directory-name segment
 var curatedCapabilities = map[string]curatedCommand{
 	"select": {
 		requiredFlags: []string{"--org"},
-		example:       "goldfinger select --org myorg --topic platform",
+		example:       "trailboss select --org myorg --topic platform",
 		notes: []string{
 			"exactly one selection mode is required and they are mutually exclusive: --all-repos, --topic (repeatable), or an explicit set via --repo (repeatable) / --repos-from <file>",
 			"--repo/--repos-from name repos by bare basename under --org (single-owner); a named repo that 404s is a hard error, and archived repos are included (a filter would skip them)",
@@ -96,7 +96,7 @@ var curatedCapabilities = map[string]curatedCommand{
 		},
 	},
 	"mirror": {
-		example: "goldfinger mirror --purpose audit",
+		example: "trailboss mirror --purpose audit",
 		notes: []string{
 			"--branch cannot be combined with --clone-depth > 0 (a shallow clone only fetches the default branch)",
 			"--workspace and --purpose are mutually exclusive",
@@ -109,7 +109,7 @@ var curatedCapabilities = map[string]curatedCommand{
 	"apply": {
 		requiredFlags: []string{"--branch", "--commit-message", "--pr-title", "--sign"},
 		enumValues:    map[string][]string{"--sign": validSignModes},
-		example:       `goldfinger apply --branch bump-dep --commit-message "bump dep" --pr-title "Bump dep" --sign local -- sed -i 's/old/new/' go.mod`,
+		example:       `trailboss apply --branch bump-dep --commit-message "bump dep" --pr-title "Bump dep" --sign local -- sed -i 's/old/new/' go.mod`,
 		notes: []string{
 			"a script command is required after -- (e.g. -- sed -i ...)",
 			"apply defaults to a dry-run; a real run additionally requires --dry-run=false AND --confirm",
@@ -120,7 +120,7 @@ var curatedCapabilities = map[string]curatedCommand{
 		},
 	},
 	"check": {
-		example: "goldfinger check --json",
+		example: "trailboss check --json",
 		notes: []string{
 			"exits non-zero (1) when the selection has drifted from live discovery",
 			nameSelectionExclusiveNote,
@@ -128,10 +128,10 @@ var curatedCapabilities = map[string]curatedCommand{
 		},
 	},
 	"scan": {
-		example: `goldfinger scan --json "debian:bullseye"`,
+		example: `trailboss scan --json "debian:bullseye"`,
 		notes: []string{
 			"takes exactly one positional pattern (a RE2 regular expression by default; -F/--fixed-strings for a literal match, -i/--ignore-case for case-insensitive)",
-			"searches the clones already on disk under the workspace (default ~/goldfinger, override with --workspace); mirror the selection first — it runs no git, opens no network, and needs no token",
+			"searches the clones already on disk under the workspace (default ~/trailboss, override with --workspace); mirror the selection first — it runs no git, opens no network, and needs no token",
 			"multi-branch is two mirrors: `mirror --purpose audit --branch dev` and `--branch main` into separate snapshots, then scan each --workspace",
 			"a selected repo not present under the workspace is reported as not scanned (with a reason), never silently dropped; a size/match cap — or a file it could not read — sets truncated and warns on stderr",
 			nameSelectionExclusiveNote,
@@ -139,35 +139,35 @@ var curatedCapabilities = map[string]curatedCommand{
 		},
 	},
 	"selections": {
-		example: "goldfinger selections --json",
+		example: "trailboss selections --json",
 	},
 	"doctor": {
-		example: "goldfinger doctor",
+		example: "trailboss doctor",
 		notes:   []string{"exits non-zero (1) when a check fails; read-only, opens no PRs and runs no git"},
 	},
 	"guide": {
-		example: "goldfinger guide --json",
+		example: "trailboss guide --json",
 	},
 	"schema": {
-		example: "goldfinger schema",
+		example: "trailboss schema",
 		notes:   []string{"prints JSON Schema for the lockfile and every machine-readable payload; read-only and offline, needs no token, opens no network, runs no git"},
 	},
 	"mcp": {
-		example: "goldfinger mcp",
+		example: "trailboss mcp",
 		notes: []string{
-			"serves goldfinger's read-and-plan surface to an AI agent over MCP (Model Context Protocol) on stdio; stdin/stdout are the JSON-RPC channel — do not pipe anything else into them",
+			"serves trailboss's read-and-plan surface to an AI agent over MCP (Model Context Protocol) on stdio; stdin/stdout are the JSON-RPC channel — do not pipe anything else into them",
 			"exposes tools guide, schema, selections, check, select, mirror, scan, workspaces_list, doctor, and apply_plan",
-			"apply is deliberately NOT a tool: opening PRs is the human's to run; apply_plan instead returns the exact, digest-bound `goldfinger apply` command (dry-run and live variants) for a human to review and execute",
+			"apply is deliberately NOT a tool: opening PRs is the human's to run; apply_plan instead returns the exact, digest-bound `trailboss apply` command (dry-run and live variants) for a human to review and execute",
 			"the server never opens PRs and never runs git",
 		},
 	},
 	"workspaces": {
-		example: "goldfinger workspaces list",
+		example: "trailboss workspaces list",
 		notes: []string{
 			"takes one positional action: `list` (enumerate snapshots) or `prune` (remove them)",
 			"prune previews by default and deletes only with --confirm (apply's confirm posture); --older-than and --purpose narrow what it targets",
-			"--purpose matches only manifest-tagged snapshots whose recorded purpose is exactly that name; it never matches a snapshot without a goldfinger-workspace.json manifest (an unfiltered prune or --older-than still targets a manifest-less snapshot)",
-			"acts on snapshot dirs under the workspace root (default ~/goldfinger, override with --root) whose name ends in a -<timestamp> stamp; never touches GitHub and runs no git",
+			"--purpose matches only manifest-tagged snapshots whose recorded purpose is exactly that name; it never matches a snapshot without a trailboss-workspace.json manifest (an unfiltered prune or --older-than still targets a manifest-less snapshot)",
+			"acts on snapshot dirs under the workspace root (default ~/trailboss, override with --root) whose name ends in a -<timestamp> stamp; never touches GitHub and runs no git",
 		},
 	},
 }
@@ -236,7 +236,7 @@ func addFlagCapability(cc *commandCapability, f *pflag.Flag, required map[string
 
 // isHiddenOrBuiltin reports whether a command should be omitted from the
 // catalogue: cobra's auto-generated help/completion commands and any hidden one
-// are not part of goldfinger's own surface.
+// are not part of trailboss's own surface.
 func isHiddenOrBuiltin(cmd *cobra.Command) bool {
 	if cmd.Hidden {
 		return true

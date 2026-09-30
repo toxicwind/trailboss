@@ -11,19 +11,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redscaresu/goldfinger/mirror"
-	"github.com/redscaresu/goldfinger/models"
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/mirror"
+	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/spf13/cobra"
 )
 
 // mirrorReportName is the filename `--write-report` writes under the workspace.
-const mirrorReportName = "goldfinger-mirror.json"
+const mirrorReportName = "trailboss-mirror.json"
 
 // reportOptions selects which machine-readable report outputs a mirror emits.
 type reportOptions struct {
 	toStdout bool // --report-json: print the report JSON to stdout
-	toFile   bool // --write-report: write <workspace>/goldfinger-mirror.json (only on success)
+	toFile   bool // --write-report: write <workspace>/trailboss-mirror.json (only on success)
 	quiet    bool
 	// ghorgLogPath is the 0600 file capturing ghorg's full output for this run (WS3
 	// of #48), "" under --quiet (where the output is discarded). runMirror prints it
@@ -125,8 +125,8 @@ func newMirrorCmd() *cobra.Command {
 	}
 	addSelectionFlags(cmd, &name, &selectionPath)
 	f := cmd.Flags()
-	f.StringVar(&workspace, "workspace", "", "absolute workspace dir (default ~/goldfinger; repos land in <workspace>/<owner>)")
-	f.StringVar(&purpose, "purpose", "", "ephemeral, timestamped workspace ~/goldfinger/<purpose>-<YYYY-MM-DD-HHMMSS.mmm> (goldfinger stamps the time to the millisecond; you clean the dir up when done); mutually exclusive with --workspace")
+	f.StringVar(&workspace, "workspace", "", "absolute workspace dir (default ~/trailboss; repos land in <workspace>/<owner>)")
+	f.StringVar(&purpose, "purpose", "", "ephemeral, timestamped workspace ~/trailboss/<purpose>-<YYYY-MM-DD-HHMMSS.mmm> (trailboss stamps the time to the millisecond; you clean the dir up when done); mutually exclusive with --workspace")
 	f.StringVar(&branch, "branch", "", "checkout this branch in every cloned repo (one name for all repos; ghorg leaves a repo on its default branch where the branch is absent). With --purpose it is also folded into the dir name: <purpose>-<branch>-<stamp>. Default: each repo's own default branch")
 	f.IntVar(&concurrency, "concurrency", 0, "concurrent clones (0 = ghorg default)")
 	f.IntVar(&cloneDepth, "clone-depth", 0, "shallow clone depth (0 = full history). Incompatible with --branch: a shallow clone only fetches each repo's default branch, so --branch would silently fall back to the default")
@@ -186,7 +186,7 @@ func runMirror(ctx context.Context, run mirror.Runner, sel models.Selection, ws,
 	if opts.DryRun {
 		return nil
 	}
-	// goldfinger's own reconciliation — the honest counterpart to ghorg's "N new
+	// trailboss's own reconciliation — the honest counterpart to ghorg's "N new
 	// clones" summary and its per-repo "Could not checkout" fall-back noise. The one
 	// read-only stat is shared between the human line and the JSON report (WS3 of
 	// #48), so an agent reading --report-json gets the same coverage/failure truth.
@@ -224,7 +224,7 @@ func emitMirrorReport(sel models.Selection, ws string, opts mirror.Options, rec 
 			return fmt.Errorf("write mirror report: %w", err)
 		}
 		// WriteFile only applies the mode when creating the file, so a re-mirror
-		// over a report left 0644 by an older goldfinger would keep the looser
+		// over a report left 0644 by an older trailboss would keep the looser
 		// mode; chmod makes 0600 hold on rewrite too.
 		if err := os.Chmod(path, 0o600); err != nil {
 			return fmt.Errorf("secure mirror report perms: %w", err)
@@ -254,14 +254,14 @@ var nowFunc = time.Now
 // resolveWorkspace returns an absolute workspace directory. ghorg requires an
 // absolute --path. There are three cases, in priority order:
 //   - --purpose: an ephemeral, timestamped dir
-//     ~/goldfinger/<purpose>[-<branch>]-<YYYY-MM-DD-HHMMSS.mmm>. goldfinger
+//     ~/trailboss/<purpose>[-<branch>]-<YYYY-MM-DD-HHMMSS.mmm>. trailboss
 //     stamps the time to the millisecond so the operator supplies only the
 //     purpose (and, when mirroring a specific --branch, that branch is folded
-//     into the name too) and each run gets its own pristine dir; goldfinger
+//     into the name too) and each run gets its own pristine dir; trailboss
 //     never deletes it — the operator cleans it up. Mutually exclusive with
 //     --workspace.
 //   - --workspace: used as given (made absolute).
-//   - neither: defaults to ~/goldfinger.
+//   - neither: defaults to ~/trailboss.
 //
 // For a --purpose snapshot it also returns a *workspaceManifest carrying the
 // snapshot's identity (purpose, branch, stamp, creation time) so the caller can
@@ -296,14 +296,14 @@ func resolveWorkspace(workspace, purpose, branch string) (string, *workspaceMani
 			Stamp:     stamp,
 			CreatedAt: now,
 		}
-		return filepath.Join(home, "goldfinger", dir), snap, nil
+		return filepath.Join(home, "trailboss", dir), snap, nil
 	}
 	if workspace == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return "", nil, fmt.Errorf("resolve home dir for workspace: %w", err)
 		}
-		return filepath.Join(home, "goldfinger"), nil, nil
+		return filepath.Join(home, "trailboss"), nil, nil
 	}
 	abs, err := filepath.Abs(workspace)
 	if err != nil {
@@ -313,7 +313,7 @@ func resolveWorkspace(workspace, purpose, branch string) (string, *workspaceMani
 }
 
 // validatePurpose rejects anything that isn't a plain directory-name component,
-// so --purpose can't traverse out of ~/goldfinger or produce a surprising path.
+// so --purpose can't traverse out of ~/trailboss or produce a surprising path.
 func validatePurpose(p string) error {
 	for _, r := range p {
 		switch {

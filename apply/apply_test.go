@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -258,7 +258,7 @@ func TestApplyOverridesExistingToken(t *testing.T) {
 
 func TestApplyStripsSourcePATFromChildEnv(t *testing.T) {
 	securityTest(t)
-	t.Setenv(models.TokenEnvVar, "raw-pat") // operator's exported GOLD_FINGER_PAT
+	t.Setenv(models.TokenEnvVar, "raw-pat") // operator's exported TRAILBOSS_PAT
 	var cap capture
 	_, err := Apply(context.Background(), cap.run, twoRepoSelection(), baseSpec(), "mapped-token")
 	require.NoError(t, err)
@@ -272,7 +272,7 @@ func TestApplyStripsSourcePATFromChildEnv(t *testing.T) {
 
 func TestApplyPinsEmptyConfig(t *testing.T) {
 	securityTest(t)
-	// multi-gitter is pointed at a goldfinger-owned empty config so host config
+	// multi-gitter is pointed at a trailboss-owned empty config so host config
 	// discovery can't override the lockfile selection. The file must exist at
 	// call time and be cleaned up afterwards.
 	var cap capture
@@ -419,7 +419,7 @@ func TestApplySignModeArgs(t *testing.T) {
 
 // TestApplyLocalSignPassesNoAuthorFlags locks the invariant that makes
 // --sign=local sign at all: multi-gitter's --git-type=cmd honours the operator's
-// commit.gpgsign ONLY while goldfinger passes no --author-name/--author-email —
+// commit.gpgsign ONLY while trailboss passes no --author-name/--author-email —
 // setting an author makes multi-gitter reduce the commit's env to GIT_AUTHOR/
 // COMMITTER_* alone, stripping HOME/GPG_TTY and breaking signing. If a future
 // change adds author flags to buildArgs, this fails loudly rather than shipping

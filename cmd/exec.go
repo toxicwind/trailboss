@@ -13,7 +13,7 @@ import (
 // execRun is the real command runner passed to the mirror/apply wrappers. It
 // streams the child tool's output straight through so the user sees ghorg's and
 // multi-gitter's progress live. The child's stdout is deliberately routed to our
-// stderr: goldfinger reserves its own stdout for machine-readable output (the
+// stderr: trailboss reserves its own stdout for machine-readable output (the
 // mirror workspace path), so a delegate's chatter must never contaminate it.
 func execRun(ctx context.Context, name string, args, env []string) error {
 	return execRunToWriter(ctx, name, args, env, os.Stderr)
@@ -24,7 +24,7 @@ func execRunQuiet(ctx context.Context, name string, args, env []string) error {
 }
 
 func execRunToWriter(ctx context.Context, name string, args, env []string, w io.Writer) error {
-	// name/args are goldfinger's own delegate wiring (ghorg/multi-gitter + flags
+	// name/args are trailboss's own delegate wiring (ghorg/multi-gitter + flags
 	// built in-process), never unsanitised external input; the single intentional exec seam.
 	c := exec.CommandContext(ctx, name, args...) //nolint:gosec // G204: see comment above — controlled delegate invocation, not external input.
 	c.Env = env
@@ -34,7 +34,7 @@ func execRunToWriter(ctx context.Context, name string, args, env []string, w io.
 	return c.Run()
 }
 
-// execApplyRun is the apply-specific runner. Dry-runs are captured so goldfinger
+// execApplyRun is the apply-specific runner. Dry-runs are captured so trailboss
 // can summarize multi-gitter's final repo counter block while still teeing live
 // progress to stderr. Live applies keep the existing streaming path.
 func execApplyRun(ctx context.Context, name string, args, env []string) ([]byte, error) {
@@ -66,7 +66,7 @@ func execApplyRunToWriter(ctx context.Context, name string, args, env []string, 
 // artifact — the caller closes the handle when ghorg finishes but does not remove
 // the file, so an operator can inspect clone errors after the terse summary.
 func newGhorgLog() (*os.File, error) {
-	f, err := os.CreateTemp("", "goldfinger-mirror-output-*.log")
+	f, err := os.CreateTemp("", "trailboss-mirror-output-*.log")
 	if err != nil {
 		return nil, fmt.Errorf("create mirror output log: %w", err)
 	}
@@ -88,7 +88,7 @@ func hasArg(args []string, want string) bool {
 }
 
 // requireTool fails with an install hint if the named CLI is not on PATH. Both
-// tools goldfinger drives are `go install`-ed, which drops them in the Go bin
+// tools trailboss drives are `go install`-ed, which drops them in the Go bin
 // dir — a spot that's frequently missing from PATH. So before telling the user
 // to reinstall, we check there: if the binary exists but just isn't on PATH,
 // the fix is a PATH export, not another install.

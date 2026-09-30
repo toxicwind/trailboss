@@ -24,7 +24,7 @@ import (
 // fields so `workspaces list`/`prune` can filter reliably instead of parsing the
 // ambiguous directory name (a purpose and a sanitised branch can both contain
 // '-', so the name alone can't be split back into its parts — issue #29).
-const workspaceManifestName = "goldfinger-workspace.json"
+const workspaceManifestName = "trailboss-workspace.json"
 
 // stampLayout is the timestamp format resolveWorkspace stamps into a --purpose
 // snapshot's directory name, and the format `workspaces` parses back out of a
@@ -106,9 +106,9 @@ var _ pflag.Value = (*ageDuration)(nil)
 
 // stampSuffixRE matches the trailing "-<stamp>" that resolveWorkspace appends to
 // every --purpose workspace, e.g. "audit-dev-2026-08-05-101112.131". It is the
-// sole recogniser of a goldfinger snapshot directory: `list`/`prune` act only on
+// sole recogniser of a trailboss snapshot directory: `list`/`prune` act only on
 // directories whose name ends this way, so they can never enumerate — let alone
-// delete — a directory goldfinger did not stamp (the default ~/goldfinger/<owner>
+// delete — a directory trailboss did not stamp (the default ~/trailboss/<owner>
 // mirror, or any unrelated dir). The pattern is specific enough that a GitHub
 // owner login can't collide with it.
 var stampSuffixRE = regexp.MustCompile(`-(\d{4}-\d{2}-\d{2}-\d{6}\.\d{3})$`)
@@ -175,11 +175,11 @@ func newWorkspacesCmd() *cobra.Command {
 		Use:   "workspaces (list | prune)",
 		Short: "List or prune ephemeral mirror snapshot workspaces",
 		Long: "workspaces manages the timestamped snapshot directories `mirror --purpose` " +
-			"creates under the workspace root (default ~/goldfinger). goldfinger never " +
+			"creates under the workspace root (default ~/trailboss). trailboss never " +
 			"deletes a snapshot on its own — this is the safe, first-class way to see and " +
 			"reclaim old ones.\n\n" +
-			"  goldfinger workspaces list   — enumerate snapshots with size and creation time.\n" +
-			"  goldfinger workspaces prune  — remove snapshots, but only after showing what it " +
+			"  trailboss workspaces list   — enumerate snapshots with size and creation time.\n" +
+			"  trailboss workspaces prune  — remove snapshots, but only after showing what it " +
 			"would delete: prune previews by default and deletes only with --confirm (the same " +
 			"posture as apply). Narrow the target with --older-than <dur> and/or --purpose <name>.\n\n" +
 			"It is filesystem-only: it never touches GitHub and runs no git. Deletion is the one " +
@@ -199,7 +199,7 @@ func newWorkspacesCmd() *cobra.Command {
 		},
 	}
 	f := cmd.Flags()
-	f.StringVar(&root, "root", "", "workspace root to scan (default ~/goldfinger)")
+	f.StringVar(&root, "root", "", "workspace root to scan (default ~/trailboss)")
 	f.Var(&olderThan, "older-than", "prune: only snapshots older than this age, e.g. 7d, 2w, or a Go duration like 168h (0 = no age filter)")
 	f.StringVar(&purpose, "purpose", "", "prune: only snapshots whose manifest records exactly this purpose (manifest-less snapshots are never matched)")
 	f.BoolVar(&confirm, "confirm", false, "prune: actually delete the matched snapshots (without it, prune only previews)")
@@ -318,7 +318,7 @@ func safeToRemove(root, path string) bool {
 }
 
 // resolveWorkspaceRoot returns the absolute directory to scan: --root if given,
-// else ~/goldfinger (the default mirror workspace root). It canonicalises the
+// else ~/trailboss (the default mirror workspace root). It canonicalises the
 // path through any symlinks so the safeToRemove parent-dir check compares real
 // paths — a symlinked root must not let a delete escape it. A not-yet-created
 // root (nobody has mirrored) has nothing to scan or delete, so its literal
@@ -336,7 +336,7 @@ func resolveWorkspaceRoot(root string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("resolve home dir for workspace root: %w", err)
 		}
-		base = filepath.Join(home, "goldfinger")
+		base = filepath.Join(home, "trailboss")
 	}
 	if resolved, err := filepath.EvalSymlinks(base); err == nil {
 		return resolved, nil
@@ -416,7 +416,7 @@ func describeWorkspace(path, stamp string) (workspaceInfo, error) {
 // legacy snapshot created before manifests, or a hand-made directory, is still a
 // valid thing to list and prune — just without structured metadata.
 func readWorkspaceManifest(dir string) (workspaceManifest, bool) {
-	data, err := os.ReadFile(filepath.Join(dir, workspaceManifestName)) //nolint:gosec // G304: dir is a mirror-workspace directory goldfinger is listing/pruning; reading its own manifest from a path it just walked is the intended behaviour.
+	data, err := os.ReadFile(filepath.Join(dir, workspaceManifestName)) //nolint:gosec // G304: dir is a mirror-workspace directory trailboss is listing/pruning; reading its own manifest from a path it just walked is the intended behaviour.
 	if err != nil {
 		return workspaceManifest{}, false
 	}
@@ -544,7 +544,7 @@ func writeWorkspaceManifest(ws string, m workspaceManifest) error {
 		return fmt.Errorf("write workspace manifest: %w", err)
 	}
 	// WriteFile only applies the mode on creation, so rewriting a manifest left
-	// 0644 by an older goldfinger would keep the looser mode; chmod makes 0600
+	// 0644 by an older trailboss would keep the looser mode; chmod makes 0600
 	// hold on rewrite too.
 	if err := os.Chmod(path, 0o600); err != nil {
 		return fmt.Errorf("secure workspace manifest perms: %w", err)

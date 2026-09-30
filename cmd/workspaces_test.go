@@ -52,7 +52,7 @@ func TestSnapshotStampRecognisesOnlyStampedDirs(t *testing.T) {
 		"audit-dev-2026-08-05-101112.131":          true,
 		"keyv-cve-feature-x-2026-01-02-030405.006": true,
 		"acme":                           false, // a plain owner dir (default mirror)
-		"goldfinger-mirror.json":         false,
+		"trailboss-mirror.json":         false,
 		"audit-2026-08-05":               false, // truncated stamp
 		"2026-08-05-101112.131-trailing": false, // stamp not at the end
 	}
@@ -357,7 +357,7 @@ func TestPruneRefusesSymlinkedSnapshot(t *testing.T) {
 }
 
 func TestSafeToRemoveGuard(t *testing.T) {
-	root := "/home/u/goldfinger"
+	root := "/home/u/trailboss"
 	assert.True(t, safeToRemove(root, filepath.Join(root, "audit-2026-08-05-101112.131")))
 	assert.False(t, safeToRemove(root, filepath.Join(root, "acme")), "a plain owner dir is not removable")
 	assert.False(t, safeToRemove(root, filepath.Join(root, "sub", "audit-2026-08-05-101112.131")), "must be a direct child")

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/redscaresu/goldfinger/mirror"
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/mirror"
+	"github.com/toxicwind/trailboss/models"
 )
 
 // branchStatus categorises, for the branch a mirror requested, what the
@@ -16,7 +16,7 @@ const (
 	// leaves this repo on its default branch.
 	branchStatusFallback = "falls-back-to-default"
 	// branchStatusUnknown: the branch was never checked at selection time (an old
-	// v1 lockfile, or `select --branch-presence` was not run for it) — goldfinger
+	// v1 lockfile, or `select --branch-presence` was not run for it) — trailboss
 	// does not guess.
 	branchStatusUnknown = "unknown"
 	// branchStatusDefault: no --branch was requested, so every repo is mirrored on
@@ -26,13 +26,13 @@ const (
 
 // branchFactsNote explains that the report's branch categorisation is only as
 // current as the selection. It is emitted whenever a --branch was requested.
-const branchFactsNote = "branchStatus values come from branch presence recorded at selection time (via `select --branch-presence`) and can drift; \"unknown\" means the branch was not checked then — goldfinger does not guess it here."
+const branchFactsNote = "branchStatus values come from branch presence recorded at selection time (via `select --branch-presence`) and can drift; \"unknown\" means the branch was not checked then — trailboss does not guess it here."
 
 // mirrorReport is the machine-readable summary of a mirror run. Every field is
 // knowable without git or re-running discovery: the selection-derived fields
 // come from the lockfile and the resolved options, and `reconciliation` from a
 // read-only filesystem check (a directory stat per repo) — the aggregate WS3
-// (issue #48) makes goldfinger's own coverage/failure truth the default machine
+// (issue #48) makes trailboss's own coverage/failure truth the default machine
 // surface instead of ghorg's pass-through stream.
 type mirrorReport struct {
 	Version         int                  `json:"version"`
@@ -48,7 +48,7 @@ type mirrorReport struct {
 // mirrorReconciliation is the aggregate coverage count for a completed mirror
 // (issue #48 WS3): how many selected repos actually landed on disk, and how many
 // did not (`notOnDisk` — the honest counterpart to a "failed" count, derived from
-// a read-only stat, not from parsing ghorg or running git). goldfinger cannot
+// a read-only stat, not from parsing ghorg or running git). trailboss cannot
 // split on-disk repos into "freshly cloned" vs "already present" without running
 // git, so it deliberately reports neither — only the coverage that is provable.
 type mirrorReconciliation struct {
@@ -64,7 +64,7 @@ type mirrorReconciliation struct {
 // mirrorBranchReconciliation tallies, for a requested --branch, how the selected
 // repos split by the presence recorded at selection time: present (ghorg checks
 // the branch out), fellBack (absent → ghorg leaves the repo on its default), and
-// unknown (never checked at selection time — goldfinger does not guess).
+// unknown (never checked at selection time — trailboss does not guess).
 type mirrorBranchReconciliation struct {
 	Present  int `json:"present"`
 	FellBack int `json:"fellBack"`

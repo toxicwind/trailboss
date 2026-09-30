@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/redscaresu/goldfinger/models"
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -82,13 +82,13 @@ func TestRunSelectWritesLockfile(t *testing.T) {
 			{Owner: "redscaresu", Name: "old", Topics: []string{"platform"}, Archived: true},
 		},
 	}
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	var out, errOut bytes.Buffer
 
 	err := runSelect(context.Background(), r, selectOpts{
 		t:             targeting{org: "redscaresu", topics: []string{"platform"}},
 		selectionPath: path,
-		tool:          "goldfinger test",
+		tool:          "trailboss test",
 		source:        tokenSourceEnv,
 	}, &out, &errOut)
 	require.NoError(t, err)
@@ -125,13 +125,13 @@ func TestRunSelectExplicitRepos(t *testing.T) {
 			"svc-b": {Owner: "acme", Name: "svc-b", DefaultBranch: "dev", Archived: true},
 		},
 	}
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	var out, errOut bytes.Buffer
 
 	err := runSelect(context.Background(), r, selectOpts{
 		t:             targeting{org: "acme", repos: []string{"svc-a", "svc-b"}},
 		selectionPath: path,
-		tool:          "goldfinger test",
+		tool:          "trailboss test",
 		source:        tokenSourceEnv,
 	}, &out, &errOut)
 	require.NoError(t, err)
@@ -160,13 +160,13 @@ func TestRunSelectExplicitRepoNotFoundIsHardError(t *testing.T) {
 			// "typo" is intentionally absent -> GetRepo returns not-found.
 		},
 	}
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	var out, errOut bytes.Buffer
 
 	err := runSelect(context.Background(), r, selectOpts{
 		t:             targeting{org: "acme", repos: []string{"svc-a", "typo"}},
 		selectionPath: path,
-		tool:          "goldfinger test",
+		tool:          "trailboss test",
 		source:        tokenSourceEnv,
 	}, &out, &errOut)
 	require.Error(t, err, "a named repo that 404s must fail loudly, not be dropped")
@@ -181,13 +181,13 @@ func TestRunSelectExplicitEmptyObeysAllowEmpty(t *testing.T) {
 	}
 	base := selectOpts{
 		t:             targeting{org: "acme", reposFrom: "repos.txt"},
-		tool:          "goldfinger test",
+		tool:          "trailboss test",
 		source:        tokenSourceEnv,
 	}
 
 	t.Run("empty explicit set is an error by default", func(t *testing.T) {
 		o := base
-		o.selectionPath = filepath.Join(t.TempDir(), "goldfinger.selection")
+		o.selectionPath = filepath.Join(t.TempDir(), "trailboss.selection")
 		var out, errOut bytes.Buffer
 		err := runSelect(context.Background(), newResolver(), o, &out, &errOut)
 		require.Error(t, err)
@@ -197,7 +197,7 @@ func TestRunSelectExplicitEmptyObeysAllowEmpty(t *testing.T) {
 	t.Run("--allow-empty writes an empty explicit lockfile with a valid ownerType", func(t *testing.T) {
 		o := base
 		o.allowEmpty = true
-		o.selectionPath = filepath.Join(t.TempDir(), "goldfinger.selection")
+		o.selectionPath = filepath.Join(t.TempDir(), "trailboss.selection")
 		var out, errOut bytes.Buffer
 		err := runSelect(context.Background(), newResolver(), o, &out, &errOut)
 		require.NoError(t, err)
@@ -225,8 +225,8 @@ func TestRunSelectExplicitRejectsRedirectedRepo(t *testing.T) {
 		}
 		return runSelect(context.Background(), r, selectOpts{
 			t:             targeting{org: "acme", repos: []string{"svc"}},
-			selectionPath: filepath.Join(t.TempDir(), "goldfinger.selection"),
-			tool:          "goldfinger test",
+			selectionPath: filepath.Join(t.TempDir(), "trailboss.selection"),
+			tool:          "trailboss test",
 			source:        tokenSourceEnv,
 		}, &bytes.Buffer{}, &bytes.Buffer{})
 	}
@@ -304,13 +304,13 @@ func TestRunSelectListEchoesNames(t *testing.T) {
 			{Owner: "redscaresu", Name: "web", Topics: []string{"frontend"}},
 		},
 	}
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	var out, errOut bytes.Buffer
 
 	err := runSelect(context.Background(), r, selectOpts{
 		t:             targeting{org: "redscaresu", topics: []string{"platform"}},
 		selectionPath: path,
-		tool:          "goldfinger test",
+		tool:          "trailboss test",
 		source:        tokenSourceEnv,
 		list:          true,
 	}, &out, &errOut)
@@ -330,13 +330,13 @@ func TestRunSelectListBeatsQuietPath(t *testing.T) {
 		ownerType: models.OwnerUser,
 		repos:     []models.Repo{{Owner: "redscaresu", Name: "platform-svc", Topics: []string{"platform"}}},
 	}
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	var out, errOut bytes.Buffer
 
 	err := runSelect(context.Background(), r, selectOpts{
 		t:             targeting{org: "redscaresu", topics: []string{"platform"}},
 		selectionPath: path,
-		tool:          "goldfinger test",
+		tool:          "trailboss test",
 		source:        tokenSourceEnv,
 		list:          true,
 		quiet:         true,
@@ -356,13 +356,13 @@ func TestRunSelectJSON(t *testing.T) {
 			{Owner: "redscaresu", Name: "platform-svc", DefaultBranch: "main", Topics: []string{"platform"}},
 		},
 	}
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	var out, errOut bytes.Buffer
 
 	err := runSelect(context.Background(), r, selectOpts{
 		t:             targeting{org: "redscaresu", topics: []string{"platform"}},
 		selectionPath: path,
-		tool:          "goldfinger test",
+		tool:          "trailboss test",
 		source:        tokenSourceEnv,
 		asJSON:        true,
 	}, &out, &errOut)
@@ -404,13 +404,13 @@ func TestRunSelectQuietPrintsLockfilePathOnly(t *testing.T) {
 			{Owner: "redscaresu", Name: "web", Topics: []string{"frontend"}},
 		},
 	}
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	var out, errOut bytes.Buffer
 
 	err := runSelect(context.Background(), r, selectOpts{
 		t:             targeting{org: "redscaresu", topics: []string{"platform"}},
 		selectionPath: path,
-		tool:          "goldfinger test",
+		tool:          "trailboss test",
 		source:        tokenSourceEnv,
 		quiet:         true,
 	}, &out, &errOut)
@@ -427,13 +427,13 @@ func TestRunSelectQuietJSONPrintsJSONOnly(t *testing.T) {
 		ownerType: models.OwnerUser,
 		repos:     []models.Repo{{Owner: "redscaresu", Name: "platform-svc", Topics: []string{"platform"}}},
 	}
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	var out, errOut bytes.Buffer
 
 	err := runSelect(context.Background(), r, selectOpts{
 		t:             targeting{org: "redscaresu", topics: []string{"platform"}},
 		selectionPath: path,
-		tool:          "goldfinger test",
+		tool:          "trailboss test",
 		source:        tokenSourceEnv,
 		asJSON:        true,
 		quiet:         true,
@@ -448,7 +448,7 @@ func TestRunSelectQuietJSONPrintsJSONOnly(t *testing.T) {
 }
 
 func TestRunSelectPropagatesErrors(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 
 	t.Run("verify error", func(t *testing.T) {
 		err := runSelect(context.Background(),
@@ -481,7 +481,7 @@ func TestRunSelectEmptyResult(t *testing.T) {
 	}
 
 	t.Run("errors and does not write", func(t *testing.T) {
-		path := filepath.Join(t.TempDir(), "goldfinger.selection")
+		path := filepath.Join(t.TempDir(), "trailboss.selection")
 		err := runSelect(context.Background(), r, selectOpts{
 			t:             targeting{org: "acme", topics: []string{"platform"}},
 			selectionPath: path,
@@ -498,7 +498,7 @@ func TestRunSelectEmptyResult(t *testing.T) {
 	})
 
 	t.Run("allow-empty writes an empty lockfile", func(t *testing.T) {
-		path := filepath.Join(t.TempDir(), "goldfinger.selection")
+		path := filepath.Join(t.TempDir(), "trailboss.selection")
 		err := runSelect(context.Background(), r, selectOpts{
 			t:             targeting{org: "acme", topics: []string{"platform"}},
 			selectionPath: path,
@@ -530,14 +530,14 @@ func TestRunSelectRecordsBranchPresence(t *testing.T) {
 		},
 		branchCalls: &calls,
 	}
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 
 	// Duplicate --branch-presence dev must be deduped.
 	err := runSelect(context.Background(), r, selectOpts{
 		t:               targeting{org: "redscaresu", topics: []string{"platform"}},
 		branchesToCheck: []string{"dev", "dev"},
 		selectionPath:   path,
-		tool:            "goldfinger test",
+		tool:            "trailboss test",
 	}, &bytes.Buffer{}, &bytes.Buffer{})
 	require.NoError(t, err)
 

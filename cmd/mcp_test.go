@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/redscaresu/goldfinger/models"
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -113,14 +113,14 @@ func TestMCPWriteToolsAreMarkedDestructive(t *testing.T) {
 func writeTestSelection(t *testing.T) (path, digest string) {
 	t.Helper()
 	dir := t.TempDir()
-	path = filepath.Join(dir, "goldfinger.selection")
+	path = filepath.Join(dir, "trailboss.selection")
 	sel := models.Selection{
 		Version:    models.SelectionVersion,
 		Owner:      "acme",
 		OwnerType:  models.OwnerOrganization,
 		Filter:     models.SelectionFilter{Topics: []string{"platform"}},
 		ResolvedAt: time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC),
-		Tool:       "goldfinger test",
+		Tool:       "trailboss test",
 		Repos: []models.Repo{
 			{Owner: "acme", Name: "alpha", DefaultBranch: "main"},
 			{Owner: "acme", Name: "beta", DefaultBranch: "main"},
@@ -170,10 +170,10 @@ func TestMCPApplyPlanReturnsDigestBoundCommandsWithoutRunningApply(t *testing.T)
 	// The argv is runnable verbatim: program first, then the apply subcommand, and
 	// the display line is the same command (not double-prefixed).
 	require.GreaterOrEqual(t, len(out.DryRunCommand.Argv), 2)
-	assert.Equal(t, "goldfinger", out.DryRunCommand.Argv[0], "argv[0] must be the program, so the argv runs verbatim")
+	assert.Equal(t, "trailboss", out.DryRunCommand.Argv[0], "argv[0] must be the program, so the argv runs verbatim")
 	assert.Equal(t, "apply", out.DryRunCommand.Argv[1])
-	assert.Equal(t, "goldfinger", out.LiveCommand.Argv[0])
-	assert.True(t, strings.HasPrefix(out.DryRunCommand.Display, "goldfinger apply "),
+	assert.Equal(t, "trailboss", out.LiveCommand.Argv[0])
+	assert.True(t, strings.HasPrefix(out.DryRunCommand.Display, "trailboss apply "),
 		"display must match the argv, not double-prefix the program: %q", out.DryRunCommand.Display)
 
 	// Both commands pin the exact lockfile; only the live one opens PRs.
@@ -323,7 +323,7 @@ func TestMCPWorkspacesListReflectsRootOnDisk(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	created := time.Date(2026, 8, 5, 10, 11, 12, 0, time.UTC)
-	makeSnapshot(t, filepath.Join(home, "goldfinger"), "audit-2026-08-05-101112.131", "audit", "", created, 2048)
+	makeSnapshot(t, filepath.Join(home, "trailboss"), "audit-2026-08-05-101112.131", "audit", "", created, 2048)
 
 	cs := connectMCPTestClient(t)
 	res, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "workspaces_list"})
@@ -350,7 +350,7 @@ func TestMCPScanSearchesTheMirrorOffline(t *testing.T) {
 	ws := t.TempDir()
 	mkClone(t, ws, "acme", "alpha", map[string]string{"Dockerfile": "FROM debian:bullseye\n"})
 	// "beta" is in the selection but never mirrored — must surface as not scanned.
-	selPath := filepath.Join(t.TempDir(), "goldfinger.selection")
+	selPath := filepath.Join(t.TempDir(), "trailboss.selection")
 	require.NoError(t, selection.Write(selPath, scanSelection("acme", "alpha", "beta"), selection.WriteOptions{Overwrite: true}))
 
 	cs := connectMCPTestClient(t)
@@ -411,7 +411,7 @@ func TestMCPSelectionsReflectsRegistryOnDisk(t *testing.T) {
 		Version:   models.SelectionVersion,
 		Owner:     "acme",
 		OwnerType: models.OwnerOrganization,
-		Tool:      "goldfinger test",
+		Tool:      "trailboss test",
 		Repos:     []models.Repo{{Owner: "acme", Name: "alpha"}, {Owner: "acme", Name: "beta"}},
 	}, selection.WriteOptions{Overwrite: true}))
 

@@ -3,7 +3,7 @@ package selection
 import (
 	"testing"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,7 +46,7 @@ func TestDigest(t *testing.T) {
 		assert.Len(t, hash, digestHashLen)
 		// A branch-presence or provenance difference must not change the fingerprint
 		// of the same (empty) repo set.
-		_, hash2 := Digest(models.Selection{Owner: "acme", Tool: "goldfinger x"})
+		_, hash2 := Digest(models.Selection{Owner: "acme", Tool: "trailboss x"})
 		assert.Equal(t, hash, hash2)
 	})
 }

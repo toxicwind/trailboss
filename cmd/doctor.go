@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redscaresu/goldfinger/client"
+	"github.com/toxicwind/trailboss/client"
 	"github.com/spf13/cobra"
 )
 
 // doctor check statuses. ok/info never fail the run; warn is advisory; fail means
-// goldfinger cannot function for at least one command and drives a non-zero exit.
+// trailboss cannot function for at least one command and drives a non-zero exit.
 const (
 	statusOK   = "ok"
 	statusInfo = "info"
@@ -30,7 +30,7 @@ const (
 // can't hang the preflight.
 const doctorProbeTimeout = 5 * time.Second
 
-// multiGitterKnownGoodFloor is the lowest multi-gitter version goldfinger's apply
+// multiGitterKnownGoodFloor is the lowest multi-gitter version trailboss's apply
 // behaviours were verified against. Two behaviours silently depend on it: the
 // `--sign local` path assumes multi-gitter commits via `--git-type=cmd` the way
 // v0.63.1 does (apply/apply.go), and the dry-run digest parser matches v0.63.1's
@@ -84,7 +84,7 @@ func newDoctorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "doctor",
 		Short: "Run read-only preflight checks (auth, child tools, git identity, signing)",
-		Long: "doctor reports whether goldfinger's environment is ready: which token " +
+		Long: "doctor reports whether trailboss's environment is ready: which token " +
 			"source and GitHub principal a run would use (and whether an ambient token " +
 			"may be shadowing it), whether ghorg and multi-gitter are on PATH, and " +
 			"whether a git identity and commit signing are configured for apply.\n\n" +
@@ -157,7 +157,7 @@ func authChecks(ctx context.Context, deps doctorDeps) []doctorCheck {
 			Check:  "auth",
 			Status: statusFail,
 			Detail: "no GitHub token resolved",
-			Fix:    "set GOLD_FINGER_PAT to a PAT, or run `gh auth login` so goldfinger can use your gh session",
+			Fix:    "set TRAILBOSS_PAT to a PAT, or run `gh auth login` so trailboss can use your gh session",
 		}}
 	}
 
@@ -182,8 +182,8 @@ func authChecks(ctx context.Context, deps doctorDeps) []doctorCheck {
 		checks = append(checks, doctorCheck{
 			Check:  "auth-shadow",
 			Status: statusWarn,
-			Detail: "ambient GITHUB_TOKEN/GH_TOKEN is set — `gh auth token` may be returning it instead of your stored gh login, so goldfinger could authenticate as an unexpected identity",
-			Fix:    "unset GITHUB_TOKEN GH_TOKEN, or set GOLD_FINGER_PAT explicitly",
+			Detail: "ambient GITHUB_TOKEN/GH_TOKEN is set — `gh auth token` may be returning it instead of your stored gh login, so trailboss could authenticate as an unexpected identity",
+			Fix:    "unset GITHUB_TOKEN GH_TOKEN, or set TRAILBOSS_PAT explicitly",
 		})
 	} else {
 		checks = append(checks, doctorCheck{
@@ -226,14 +226,14 @@ func toolCheck(ctx context.Context, deps doctorDeps, name, installHint, versionF
 	return check
 }
 
-// versionFloorWarning reports whether a probed tool version is below goldfinger's
+// versionFloorWarning reports whether a probed tool version is below trailboss's
 // known-good floor, or can't be read at all, returning the advisory detail/fix to
 // attach. warn is false only when the version parses AND meets the floor. It never
 // drives a failure — an old or unreadable version is a warning, not a hard gate.
 func versionFloorWarning(version, floor string) (detail, fix string, warn bool) {
 	got, ok := parseSemver(version)
 	if !ok {
-		return fmt.Sprintf("could not read a version to check against goldfinger's known-good floor %s "+
+		return fmt.Sprintf("could not read a version to check against trailboss's known-good floor %s "+
 			"(apply's local-signing and dry-run parsing were verified against %s)", floor, floor), "", true
 	}
 	want, ok := parseSemver(floor)
@@ -243,7 +243,7 @@ func versionFloorWarning(version, floor string) (detail, fix string, warn bool) 
 		return "", "", false
 	}
 	if compareSemver(got, want) < 0 {
-		return fmt.Sprintf("below goldfinger's known-good floor %s — apply's local-signing (--git-type=cmd) and "+
+		return fmt.Sprintf("below trailboss's known-good floor %s — apply's local-signing (--git-type=cmd) and "+
 			"dry-run parsing were verified against %s; an older version may behave differently", floor, floor),
 			"upgrade multi-gitter to >= " + floor, true
 	}
@@ -379,7 +379,7 @@ func signingCheck(cfg gitConfig) doctorCheck {
 // renderDoctor writes the human report: a banner to stderr, the check lines to
 // stdout (so the report is pipeable, matching check's stdout=data convention).
 func renderDoctor(out, errOut io.Writer, checks []doctorCheck) {
-	banner(errOut, "goldfinger doctor")
+	banner(errOut, "trailboss doctor")
 	s := newStyler(out)
 	for _, c := range checks {
 		fmt.Fprintf(out, "%s %s: %s\n", s.paint(statusColor(c.Status), "["+c.Status+"]"), c.Check, c.Detail)
@@ -435,16 +435,16 @@ func probeToolDefault(ctx context.Context, name string) (path, version string, o
 // first output line trimmed, or "" if the probe fails. Both ghorg and
 // multi-gitter expose a `version` subcommand.
 //
-// The child's environment is scrubbed of every token var goldfinger might hold
-// (GOLD_FINGER_PAT and the GITHUB_TOKEN/GH_TOKEN/GHORG_GITHUB_TOKEN family): a
+// The child's environment is scrubbed of every token var trailboss might hold
+// (TRAILBOSS_PAT and the GITHUB_TOKEN/GH_TOKEN/GHORG_GITHUB_TOKEN family): a
 // version probe needs no credential, and a rogue or wrong binary on PATH must not
-// be able to echo a token that goldfinger would then print. The charter forbids
+// be able to echo a token that trailboss would then print. The charter forbids
 // ever printing the token — this keeps that true even for a hostile PATH entry.
 func probeToolVersion(ctx context.Context, path string) string {
 	ctx, cancel := context.WithTimeout(ctx, doctorProbeTimeout)
 	defer cancel()
 	// Route through the stdio-safe bounded runner so this probe is safe even while
-	// goldfinger serves MCP (doctor is an MCP tool): a wedged or chatty `version`
+	// trailboss serves MCP (doctor is an MCP tool): a wedged or chatty `version`
 	// child cannot hang the server or balloon its memory. The env is scrubbed of
 	// every token var, so a rogue PATH binary receives no credential to echo.
 	out, err := mcpProbe(ctx, path, []string{"version"}, scrubTokenEnv(os.Environ()))
@@ -459,10 +459,10 @@ func probeToolVersion(ctx context.Context, path string) string {
 }
 
 // scrubTokenEnv returns env with every credential-bearing variable removed, so a
-// probed child can never receive (and therefore never echo) goldfinger's token.
+// probed child can never receive (and therefore never echo) trailboss's token.
 func scrubTokenEnv(env []string) []string {
 	drop := map[string]bool{
-		tokenEnvVar:          true, // GOLD_FINGER_PAT
+		tokenEnvVar:          true, // TRAILBOSS_PAT
 		"GITHUB_TOKEN":       true,
 		"GH_TOKEN":           true,
 		"GHORG_GITHUB_TOKEN": true,

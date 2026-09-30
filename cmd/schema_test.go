@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +21,7 @@ var update = flag.Bool("update", false, "update golden files")
 
 const schemaGoldenPath = "testdata/schema.golden.json"
 
-// TestSchemaCommandMatchesGolden pins the exact JSON `goldfinger schema` emits, so
+// TestSchemaCommandMatchesGolden pins the exact JSON `trailboss schema` emits, so
 // any change to a payload's shape must be a deliberate, reviewed golden update
 // rather than a silent drift. The catalogue is fully static (no cobra tree, no
 // clock), so the output is deterministic.
@@ -183,7 +183,7 @@ func TestSampleOutputValidatesAgainstSchema(t *testing.T) {
 		OwnerType:  models.OwnerOrganization,
 		Filter:     models.SelectionFilter{AllRepos: false, Topics: []string{"platform"}},
 		ResolvedAt: time.Now().UTC(),
-		Tool:       "goldfinger test",
+		Tool:       "trailboss test",
 		Repos: []models.Repo{{
 			Owner: "acme", Name: "a", CloneURL: "https://github.com/acme/a.git",
 			DefaultBranch: "main", Topics: []string{"platform"}, Archived: false,
@@ -193,7 +193,7 @@ func TestSampleOutputValidatesAgainstSchema(t *testing.T) {
 	}
 	samples := map[string]any{
 		"lockfile": sel,
-		"select":   selectJSONReport{SelectionPath: "goldfinger.selection", Selection: sel, Digest: "0123456789ab"},
+		"select":   selectJSONReport{SelectionPath: "trailboss.selection", Selection: sel, Digest: "0123456789ab"},
 		"check": checkReport{
 			Version: checkReportVersion, Name: "platform", InSync: false,
 			Added:              []string{"acme/new"},
@@ -242,10 +242,10 @@ func TestSampleOutputValidatesAgainstSchema(t *testing.T) {
 		},
 		"capabilities": buildCapabilities(newRootCmd()),
 		"workspaces": workspacesReport{
-			Version: workspacesReportVersion, Root: "/home/u/goldfinger",
+			Version: workspacesReportVersion, Root: "/home/u/trailboss",
 			Action: workspaceActionList, Pruned: false,
 			Workspaces: []workspaceInfo{{
-				Path: "/home/u/goldfinger/audit-dev-2026-08-05-101112.131", Purpose: "audit",
+				Path: "/home/u/trailboss/audit-dev-2026-08-05-101112.131", Purpose: "audit",
 				Branch: "dev", Stamp: "2026-08-05-101112.131", Owner: "acme", SizeBytes: 4096,
 				CreatedAt: time.Now().UTC().Format(time.RFC3339), ManifestPresent: true,
 			}},
@@ -309,10 +309,10 @@ func TestSampleOutputValidatesAgainstSchema(t *testing.T) {
 		// out entirely, exercising that the schema marks them optional (only
 		// path/sizeBytes/manifestPresent are required).
 		{"workspaces", workspacesReport{
-			Version: workspacesReportVersion, Root: "/home/u/goldfinger",
+			Version: workspacesReportVersion, Root: "/home/u/trailboss",
 			Action: workspaceActionPrune, Pruned: false,
 			Workspaces: []workspaceInfo{{
-				Path:  "/home/u/goldfinger/legacy-2026-01-02-030405.006",
+				Path:  "/home/u/trailboss/legacy-2026-01-02-030405.006",
 				Stamp: "2026-01-02-030405.006", SizeBytes: 0, ManifestPresent: false,
 			}},
 		}},

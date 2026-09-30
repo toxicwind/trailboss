@@ -7,6 +7,6 @@ import (
 )
 
 func TestRepoFullName(t *testing.T) {
-	r := Repo{Owner: "redscaresu", Name: "goldfinger"}
-	assert.Equal(t, "redscaresu/goldfinger", r.FullName())
+	r := Repo{Owner: "redscaresu", Name: "trailboss"}
+	assert.Equal(t, "redscaresu/trailboss", r.FullName())
 }

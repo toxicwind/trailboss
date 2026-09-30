@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 )
 
 // digestHashLen is how many hex characters of the sha256 the short fingerprint

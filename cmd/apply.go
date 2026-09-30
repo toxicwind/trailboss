@@ -8,9 +8,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/redscaresu/goldfinger/apply"
-	"github.com/redscaresu/goldfinger/models"
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/apply"
+	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +42,7 @@ func newApplyCmd() *cobra.Command {
 			"via multi-gitter. It defaults to a dry-run; a real run additionally requires " +
 			"--dry-run=false AND --confirm, and every run must state --sign.\n\n" +
 			"Base branch routing: omit --base-branch to let each PR target its repo's own " +
-			"default branch — goldfinger passes no base to multi-gitter, which resolves " +
+			"default branch — trailboss passes no base to multi-gitter, which resolves " +
 			"each repo's LIVE default at run time, so a selection mixing (say) dev-default " +
 			"and main-default repos routes correctly in one run. Pass --base-branch only to " +
 			"force a single shared base across every repo (a repo lacking that branch then " +
@@ -157,12 +157,12 @@ func newApplyCmd() *cobra.Command {
 	f.IntVar(&batchSize, "batch-size", 0, "open PRs in batches of this many repos to stay under GitHub rate limits (0 = one run over the whole selection)")
 	f.DurationVar(&batchPause, "batch-pause", 0, "pause between batches, e.g. 60s (only used with --batch-size)")
 	f.StringVar(&expectSHA, "expect-selection-sha256", "", "refuse to run unless the selection lockfile's sha256 (over its exact bytes) matches this 64-char hex digest — binds an apply to the precise selection a plan was reviewed against (empty = no check)")
-	f.BoolVar(&planJSON, "plan-json", false, "emit a machine-readable plan of what goldfinger will invoke (invocation metadata only, not the diff; command redacted to argv[0]) on stdout before delegating; supplements — does not replace — the dry-run status digest (on stderr; suppressed under --quiet, where the plan owns stdout)")
+	f.BoolVar(&planJSON, "plan-json", false, "emit a machine-readable plan of what trailboss will invoke (invocation metadata only, not the diff; command redacted to argv[0]) on stdout before delegating; supplements — does not replace — the dry-run status digest (on stderr; suppressed under --quiet, where the plan owns stdout)")
 	return cmd
 }
 
 // warnMultiGitterFloor prints doctor's known-good-floor advisory at the point of
-// action when the installed multi-gitter is below goldfinger's verified floor (or
+// action when the installed multi-gitter is below trailboss's verified floor (or
 // its version can't be read). It reuses doctor's probe and floor logic so the two
 // surfaces can't drift: apply's --sign local (--git-type=cmd) and dry-run digest
 // parsing were verified against multiGitterKnownGoodFloor, and an older binary may
@@ -212,7 +212,7 @@ type applyOutputOptions struct {
 // runApply frames the apply phase and delegates to the apply package. It is the
 // testable core of the apply command.
 //
-// When planJSON is set, the machine-readable plan (what goldfinger will invoke) is
+// When planJSON is set, the machine-readable plan (what trailboss will invoke) is
 // written to out (stdout) before delegating — it supplements, and never replaces,
 // the dry-run status digest (on stderr normally; relocated to stdout under
 // --quiet, or suppressed when --quiet and --plan-json both claim stdout). It is
@@ -238,7 +238,7 @@ func runApply(ctx context.Context, run apply.Runner, sel models.Selection, spec 
 	for _, r := range sel.Repos {
 		fmt.Fprintf(errOut, "  %s -> %s\n", r.FullName(), resolveBase(spec.BaseBranch, r))
 	}
-	// Without a global --base-branch, goldfinger passes no base to multi-gitter,
+	// Without a global --base-branch, trailboss passes no base to multi-gitter,
 	// which targets each repo's *live* default at run time. The branches printed
 	// above are the defaults recorded at selection time, so flag that they can
 	// drift rather than presenting them as the guaranteed target.
@@ -340,7 +340,7 @@ func emitFullRunLog(w io.Writer, output []byte, writeLog bool) error {
 }
 
 func writeFullRunOutput(output []byte) (string, error) {
-	f, err := os.CreateTemp("", "goldfinger-apply-output-*.log")
+	f, err := os.CreateTemp("", "trailboss-apply-output-*.log")
 	if err != nil {
 		return "", fmt.Errorf("create full run output file: %w", err)
 	}

@@ -2,7 +2,7 @@
 #
 # A LIVE recording: it really resolves, clones, scans, and dry-run-applies across
 # a handful of public github.com/redscaresu repos. The apply is a DRY RUN, so it
-# opens no PRs. Needs a gh auth session (or GOLD_FINGER_PAT), plus ghorg,
+# opens no PRs. Needs a gh auth session (or TRAILBOSS_PAT), plus ghorg,
 # multi-gitter, and perl on PATH.
 
 Output docs/demo.gif

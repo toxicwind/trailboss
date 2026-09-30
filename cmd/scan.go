@@ -8,8 +8,8 @@ import (
 	"os"
 	"sort"
 
-	"github.com/redscaresu/goldfinger/models"
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/spf13/cobra"
 )
 
@@ -97,7 +97,7 @@ func newScanCmd() *cobra.Command {
 			"debian:bullseye appear?\", \"does any repo pin a poisoned name@version?\").\n\n" +
 			"The search is entirely local: scan reads the lockfile for the exact repo " +
 			"set, then greps the clones already on disk under the workspace (default " +
-			"~/goldfinger; mirror first). It runs no git, opens no network connection, " +
+			"~/trailboss; mirror first). It runs no git, opens no network connection, " +
 			"and needs no token — so it burns zero GitHub rate limit. Multi-branch " +
 			"(dev vs main) is two mirrors: `mirror --purpose audit --branch dev` and " +
 			"`--branch main` into separate snapshots, then scan each.\n\n" +
@@ -118,7 +118,7 @@ func newScanCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// resolveWorkspace with no purpose/branch yields the default ~/goldfinger
+			// resolveWorkspace with no purpose/branch yields the default ~/trailboss
 			// or the given --workspace, made absolute — the same path mirror clones
 			// into, so scan searches exactly where mirror wrote.
 			ws, _, err := resolveWorkspace(workspace, "", "")
@@ -136,7 +136,7 @@ func newScanCmd() *cobra.Command {
 	}
 	addSelectionFlags(cmd, &name, &selectionPath)
 	f := cmd.Flags()
-	f.StringVar(&workspace, "workspace", "", "workspace dir the selection was mirrored into (default ~/goldfinger; repos are read from <workspace>/<owner>)")
+	f.StringVar(&workspace, "workspace", "", "workspace dir the selection was mirrored into (default ~/trailboss; repos are read from <workspace>/<owner>)")
 	f.BoolVarP(&ignoreCase, "ignore-case", "i", false, "case-insensitive match")
 	f.BoolVarP(&fixedStrings, "fixed-strings", "F", false, "treat the pattern as a literal string, not a regular expression")
 	f.BoolVar(&asJSON, "json", false, "emit the match report as JSON on stdout (the human summary stays on stderr)")

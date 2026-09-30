@@ -143,7 +143,7 @@ func TestAmbientTokenWarning(t *testing.T) {
 
 	t.Run("PAT source never warns", func(t *testing.T) {
 		t.Setenv("GITHUB_TOKEN", "ghp_ambient")
-		// GOLD_FINGER_PAT is goldfinger's own explicit input, so an ambient token
+		// TRAILBOSS_PAT is trailboss's own explicit input, so an ambient token
 		// is irrelevant to its resolution and must not raise a warning.
 		assert.Empty(t, ambientTokenWarning(tokenSourceEnv))
 	})

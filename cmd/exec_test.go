@@ -27,7 +27,7 @@ func TestExecRunUnknownBinary(t *testing.T) {
 }
 
 // TestExecRunRoutesChildStdoutToStderr locks the item-D contract: a delegate's
-// stdout must land on the process's stderr, never its stdout, so goldfinger's
+// stdout must land on the process's stderr, never its stdout, so trailboss's
 // own stdout (the machine-readable workspace path) can't be contaminated by
 // ghorg/multi-gitter chatter. It swaps os.Stdout/os.Stderr for pipes around one
 // child run (the test package runs sequentially, so the global swap is safe).
@@ -134,7 +134,7 @@ func TestHasArg(t *testing.T) {
 }
 
 func TestRequireToolPresent(t *testing.T) {
-	// sh is always on PATH on the platforms goldfinger targets.
+	// sh is always on PATH on the platforms trailboss targets.
 	require.NoError(t, requireTool("sh", "install a POSIX shell"))
 }
 
@@ -142,7 +142,7 @@ func TestRequireToolInGoBinHintsPath(t *testing.T) {
 	// A tool that's installed under GOBIN but not on PATH should get a
 	// PATH-export hint, not a reinstall instruction.
 	gobin := t.TempDir()
-	tool := "goldfinger-fake-tool"
+	tool := "trailboss-fake-tool"
 	require.NoError(t, os.WriteFile(filepath.Join(gobin, tool), []byte("#!/bin/sh\n"), 0o755))
 	t.Setenv("GOBIN", gobin)
 	t.Setenv("PATH", "") // ensure LookPath can't find it
@@ -159,7 +159,7 @@ func TestRequireToolMissingEverywhereHintsInstall(t *testing.T) {
 	t.Setenv("GOPATH", t.TempDir())
 	t.Setenv("PATH", "")
 
-	err := requireTool("goldfinger-absent-tool", "https://example.test/install")
+	err := requireTool("trailboss-absent-tool", "https://example.test/install")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "https://example.test/install")
 }

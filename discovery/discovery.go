@@ -2,7 +2,7 @@
 // pure logic over plain structs — no network access — so it is trivial to test.
 package discovery
 
-import "github.com/redscaresu/goldfinger/models"
+import "github.com/toxicwind/trailboss/models"
 
 // Filter expresses which repos a run should target.
 type Filter struct {

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,10 +20,10 @@ func sampleSelection() models.Selection {
 		OwnerType:       "User",
 		Filter:          models.SelectionFilter{Topics: []string{"platform"}},
 		ResolvedAt:      time.Date(2026, 8, 1, 15, 0, 0, 0, time.UTC),
-		Tool:            "goldfinger test",
+		Tool:            "trailboss test",
 		BranchesChecked: []string{"dev"},
 		Repos: []models.Repo{
-			{Owner: "redscaresu", Name: "goldfinger", DefaultBranch: "main", Topics: []string{"platform"}, BranchPresence: map[string]bool{"dev": true}},
+			{Owner: "redscaresu", Name: "trailboss", DefaultBranch: "main", Topics: []string{"platform"}, BranchPresence: map[string]bool{"dev": true}},
 			{Owner: "redscaresu", Name: "simpleAPI", DefaultBranch: "master", BranchPresence: map[string]bool{"dev": false}},
 		},
 	}
@@ -42,7 +42,7 @@ func ownedSelection(owner string) models.Selection {
 }
 
 func TestWriteReadRoundTrip(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	want := sampleSelection()
 
 	require.NoError(t, Write(path, want, WriteOptions{Overwrite: true}))
@@ -77,7 +77,7 @@ func TestReadRejectsUnsafeOrInconsistentLockfiles(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			path := filepath.Join(t.TempDir(), "goldfinger.selection")
+			path := filepath.Join(t.TempDir(), "trailboss.selection")
 			sel := sampleSelection()
 			tc.mutate(&sel)
 			// Write does not guard names, so this simulates a hand-edited/hostile file.
@@ -101,12 +101,12 @@ func TestReadRejectsDuplicateRepoIdentities(t *testing.T) {
 		name string
 		dup  string
 	}{
-		{"exact duplicate", "goldfinger"},
-		{"case-variant duplicate", "GoldFinger"},
+		{"exact duplicate", "trailboss"},
+		{"case-variant duplicate", "TrailBoss"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			path := filepath.Join(t.TempDir(), "goldfinger.selection")
+			path := filepath.Join(t.TempDir(), "trailboss.selection")
 			sel := sampleSelection()
 			sel.Repos = append(sel.Repos, models.Repo{Owner: sel.Owner, Name: tc.dup, DefaultBranch: "main"})
 			require.NoError(t, Write(path, sel, WriteOptions{Overwrite: true}))
@@ -122,7 +122,7 @@ func TestReadRejectsDuplicateRepoIdentities(t *testing.T) {
 // case-insensitive (GitHub treats owner logins that way), so a legitimate case
 // variant is not rejected.
 func TestReadAcceptsCaseVariantOwner(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	sel := sampleSelection()
 	sel.Repos[0].Owner = "RedScareSU" // same owner, different case
 	require.NoError(t, Write(path, sel, WriteOptions{Overwrite: true}))
@@ -133,7 +133,7 @@ func TestReadAcceptsCaseVariantOwner(t *testing.T) {
 }
 
 func TestWriteNoOverwriteRefusesExisting(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	first := sampleSelection()
 	require.NoError(t, Write(path, first, WriteOptions{Overwrite: false}))
 
@@ -159,7 +159,7 @@ func TestWriteNoOverwriteRefusesExisting(t *testing.T) {
 }
 
 func TestWriteConcurrentCreateOrFailExactlyOneWins(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	const writers = 8
 	var wg sync.WaitGroup
 	results := make([]error, writers)
@@ -193,7 +193,7 @@ func TestWriteConcurrentCreateOrFailExactlyOneWins(t *testing.T) {
 }
 
 func TestReadWithDigestHashesExactBytes(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	require.NoError(t, Write(path, sampleSelection(), WriteOptions{Overwrite: true}))
 
 	sel, digest, err := ReadWithDigest(path)
@@ -217,11 +217,11 @@ func TestReadWithDigestHashesExactBytes(t *testing.T) {
 func TestReadMissingFile(t *testing.T) {
 	_, err := Read(filepath.Join(t.TempDir(), "nope.selection"))
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "goldfinger select")
+	assert.Contains(t, err.Error(), "trailboss select")
 }
 
 func TestReadUnsupportedVersion(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	require.NoError(t, os.WriteFile(path, []byte(`{"version":999,"owner":"x"}`), 0o644))
 
 	_, err := Read(path)
@@ -232,16 +232,16 @@ func TestReadUnsupportedVersion(t *testing.T) {
 func TestReadMigratesV1(t *testing.T) {
 	// A v1 lockfile predates branch-presence metadata; Read must accept it and
 	// leave branch facts empty so they read back as "unknown" — never guessed.
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	v1 := `{
   "version": 1,
   "owner": "redscaresu",
   "ownerType": "User",
   "filter": { "topics": ["platform"] },
   "resolvedAt": "2026-08-01T15:00:00Z",
-  "tool": "goldfinger v1",
+  "tool": "trailboss v1",
   "repos": [
-    { "owner": "redscaresu", "name": "goldfinger", "cloneURL": "https://github.com/redscaresu/goldfinger.git", "defaultBranch": "main", "topics": ["platform"] }
+    { "owner": "redscaresu", "name": "trailboss", "cloneURL": "https://github.com/toxicwind/trailboss.git", "defaultBranch": "main", "topics": ["platform"] }
   ]
 }`
 	require.NoError(t, os.WriteFile(path, []byte(v1), 0o644))
@@ -290,7 +290,7 @@ func TestDirHonoursXDG(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg")
 	dir, err := Dir()
 	require.NoError(t, err)
-	assert.Equal(t, "/tmp/xdg/goldfinger/selections", dir)
+	assert.Equal(t, "/tmp/xdg/trailboss/selections", dir)
 }
 
 func TestDirFallsBackToHome(t *testing.T) {
@@ -299,11 +299,11 @@ func TestDirFallsBackToHome(t *testing.T) {
 	require.NoError(t, err)
 	home, err := os.UserHomeDir()
 	require.NoError(t, err)
-	assert.Equal(t, filepath.Join(home, ".config", "goldfinger", "selections"), dir)
+	assert.Equal(t, filepath.Join(home, ".config", "trailboss", "selections"), dir)
 }
 
 func TestReadCorruptJSON(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "goldfinger.selection")
+	path := filepath.Join(t.TempDir(), "trailboss.selection")
 	require.NoError(t, os.WriteFile(path, []byte(`not json`), 0o644))
 
 	_, err := Read(path)

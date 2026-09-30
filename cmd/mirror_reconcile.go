@@ -6,11 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/redscaresu/goldfinger/mirror"
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/mirror"
+	"github.com/toxicwind/trailboss/models"
 )
 
-// reconciliation is goldfinger's own count-based truth about a completed mirror,
+// reconciliation is trailboss's own count-based truth about a completed mirror,
 // derived from the two sources it can read without running git or re-running
 // discovery: the lockfile (what was selected, and — for a requested branch —
 // what presence was frozen at selection time) and a read-only filesystem check
@@ -99,7 +99,7 @@ func (r reconciliation) toReport() mirrorReconciliation {
 	return out
 }
 
-// reportReconciliation prints goldfinger's authoritative post-mirror summary to
+// reportReconciliation prints trailboss's authoritative post-mirror summary to
 // errOut (stderr — stdout stays reserved for the path/JSON) from a precomputed
 // reconciliation, so the caller can share the one filesystem stat with the JSON
 // report. A full mirror reads as a success line; a shortfall is flagged as a

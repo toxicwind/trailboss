@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/spf13/cobra"
 )
 
@@ -11,9 +11,9 @@ import (
 // cannot silently drift from the types they describe.
 const jsonSchemaDialect = "https://json-schema.org/draft/2020-12/schema"
 
-// schemaCatalogue is the payload emitted by `goldfinger schema`: a versioned map
+// schemaCatalogue is the payload emitted by `trailboss schema`: a versioned map
 // from surface name to its JSON Schema. It exists so an agent (or the MCP layer)
-// can validate goldfinger's machine output without scraping the prose docs — the
+// can validate trailboss's machine output without scraping the prose docs — the
 // companion to `guide --json`, which describes the *input* surface (issue #27 §4).
 //
 // The keys mirror the machine surfaces: "lockfile" is the on-disk selection
@@ -30,10 +30,10 @@ func newSchemaCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "schema",
 		Short: "Print JSON Schema for the lockfile and every machine-readable payload",
-		Long: "schema prints the JSON Schema for goldfinger's machine surfaces: the " +
+		Long: "schema prints the JSON Schema for trailboss's machine surfaces: the " +
 			"selection lockfile plus each command's --json/report payload. It is the " +
 			"output-side companion to `guide --json` (which describes the input " +
-			"surface), so an agent can validate what goldfinger emits without parsing " +
+			"surface), so an agent can validate what trailboss emits without parsing " +
 			"the prose docs.\n\n" +
 			"It is entirely read-only and offline: it needs no token, opens no network " +
 			"connection, and runs no git. Output is always JSON on stdout; the --json " +
@@ -58,7 +58,7 @@ func buildSchemaCatalogue() schemaCatalogue {
 		Version: schemaCatalogueVersion,
 		Schemas: map[string]any{
 			"lockfile": schemaDoc("Selection lockfile",
-				"The frozen selection persisted to goldfinger.selection and consumed by mirror and apply.",
+				"The frozen selection persisted to trailboss.selection and consumed by mirror and apply.",
 				selectionSchemaObj()),
 			"select": schemaDoc("select --json",
 				"The wrapper select --json emits: the on-disk path plus the full lockfile.",
@@ -73,7 +73,7 @@ func buildSchemaCatalogue() schemaCatalogue {
 				"The preflight-check report doctor --json emits.",
 				doctorReportSchemaObj()),
 			"apply-plan": schemaDoc("apply --plan-json",
-				"The invocation plan apply --plan-json emits — what goldfinger is about to run, not the resulting diff.",
+				"The invocation plan apply --plan-json emits — what trailboss is about to run, not the resulting diff.",
 				applyPlanSchemaObj()),
 			"mirror-report": schemaDoc("mirror --report-json",
 				"The mirror summary mirror --report-json emits, built from the lockfile alone.",
@@ -87,11 +87,11 @@ func buildSchemaCatalogue() schemaCatalogue {
 			"workspaces": schemaDoc("workspaces list/prune --json",
 				"The snapshot-workspace listing workspaces list/prune emit under the workspace root.",
 				workspacesReportSchemaObj()),
-			"workspace-manifest": schemaDoc("workspace manifest (goldfinger-workspace.json)",
+			"workspace-manifest": schemaDoc("workspace manifest (trailboss-workspace.json)",
 				"The sidecar manifest mirror --purpose writes into each snapshot workspace, recording its purpose/branch/stamp/owner for workspaces to read.",
 				workspaceManifestSchemaObj()),
 			"error": schemaDoc("error (machine mode)",
-				"The single-line failure object goldfinger emits to stderr under --quiet: a parseable error message plus the process exit code, in place of the human `Error:` line.",
+				"The single-line failure object trailboss emits to stderr under --quiet: a parseable error message plus the process exit code, in place of the human `Error:` line.",
 				errorReportSchemaObj()),
 		},
 	}

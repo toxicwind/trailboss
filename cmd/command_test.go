@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/redscaresu/goldfinger/models"
-	"github.com/redscaresu/goldfinger/selection"
+	"github.com/toxicwind/trailboss/models"
+	"github.com/toxicwind/trailboss/selection"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -50,7 +50,7 @@ func TestHelpRenders(t *testing.T) {
 	} {
 		out, err := executeCmd(t, "", args...)
 		require.NoError(t, err)
-		assert.Contains(t, out, "goldfinger")
+		assert.Contains(t, out, "trailboss")
 	}
 }
 
@@ -69,7 +69,7 @@ func TestQuietFlagIsPersistent(t *testing.T) {
 	} {
 		out, err := executeCmd(t, "", args...)
 		require.NoError(t, err)
-		assert.Contains(t, out, "goldfinger — operator guide")
+		assert.Contains(t, out, "trailboss — operator guide")
 	}
 }
 
@@ -87,7 +87,7 @@ func TestSelectValidation(t *testing.T) {
 			name:    "missing token",
 			token:   "",
 			args:    []string{"select", "--org", "acme", "--all-repos"},
-			wantErr: "GOLD_FINGER_PAT",
+			wantErr: "TRAILBOSS_PAT",
 		},
 		{
 			name:    "missing org",

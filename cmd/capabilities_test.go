@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -133,7 +133,7 @@ func TestCapabilitiesListsExactlyTheRegisteredCommands(t *testing.T) {
 	assert.ElementsMatch(t,
 		[]string{"select", "mirror", "apply", "check", "scan", "selections", "doctor", "guide", "schema", "workspaces", "mcp"},
 		catalogued,
-		"the catalogue must list exactly goldfinger's own commands")
+		"the catalogue must list exactly trailboss's own commands")
 }
 
 // TestEveryCommandHasCuratedExample forces a hand-authored example per command, so
@@ -451,14 +451,14 @@ func TestCuratedExamplesReferenceRealFlags(t *testing.T) {
 	root := newRootCmd()
 	for name, cur := range curatedCapabilities {
 		require.NotEmptyf(t, cur.example, "command %q needs a curated example", name)
-		assert.Truef(t, strings.HasPrefix(cur.example, "goldfinger "+name),
-			"example for %q must invoke `goldfinger %s`, got %q", name, name, cur.example)
+		assert.Truef(t, strings.HasPrefix(cur.example, "trailboss "+name),
+			"example for %q must invoke `trailboss %s`, got %q", name, name, cur.example)
 
 		cmd, _, err := root.Find([]string{name})
 		require.NoError(t, err)
 		for _, tok := range strings.Fields(cur.example) {
 			if tok == "--" {
-				break // everything after -- is the apply script, not goldfinger's flags
+				break // everything after -- is the apply script, not trailboss's flags
 			}
 			if !strings.HasPrefix(tok, "--") {
 				continue

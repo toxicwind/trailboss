@@ -1,5 +1,5 @@
 // Package mirror clones a selection into a local workspace by shelling out to
-// ghorg. goldfinger owns the selection; ghorg owns the cloning.
+// ghorg. trailboss owns the selection; ghorg owns the cloning.
 package mirror
 
 import (
@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 )
 
 // tokenEnv is the environment variable ghorg reads its GitHub PAT from.
@@ -19,7 +19,7 @@ const tokenEnv = "GHORG_GITHUB_TOKEN" //nolint:gosec // G101: this is the name o
 // ambientGhorgEnv lists GHORG_* environment variables that would let host config
 // silently change which repos get mirrored — by filtering the target set
 // (topics/prefix/regex/language/archived/forks, or a pointed-at ghorgignore) or
-// by pruning repos out of the workspace. goldfinger's guarantee is that the
+// by pruning repos out of the workspace. trailboss's guarantee is that the
 // lockfile is the exact set, so these are scrubbed from ghorg's environment: the
 // lockfile, not the host, decides what gets mirrored.
 var ambientGhorgEnv = []string{
@@ -38,7 +38,7 @@ var ambientGhorgEnv = []string{
 }
 
 // layoutGhorgEnv lists GHORG_* environment variables that change WHERE clones
-// land on disk. goldfinger promises a fixed <workspace>/<owner>/<repo> layout —
+// land on disk. trailboss promises a fixed <workspace>/<owner>/<repo> layout —
 // it prints that path on stdout, builds the mirror report against it, and
 // reconciles the on-disk count against it — so the host must not be able to
 // relocate the clones out from under that promise. These are scrubbed from
@@ -46,7 +46,7 @@ var ambientGhorgEnv = []string{
 // argv (--output-dir, --preserve-scm-hostname=false) so a ghorg config file
 // (which a CLI flag still overrides, but an env scrub does not reach) can't move
 // them either. GHORG_PRESERVE_DIRECTORY_STRUCTURE is GitLab-only, so scrubbing
-// its env is enough (goldfinger only clones GitHub).
+// its env is enough (trailboss only clones GitHub).
 var layoutGhorgEnv = []string{
 	"GHORG_OUTPUT_DIR",
 	"GHORG_PRESERVE_SCM_HOSTNAME",
@@ -83,7 +83,7 @@ func Mirror(ctx context.Context, run Runner, s models.Selection, token string, o
 	// Neutralise the default ~/.config/ghorg/ghorgignore (and any host one) by
 	// pointing ghorg at an empty ignore file, so an ambient ghorgignore can't
 	// silently drop repos from the lockfile set.
-	ignoreFile, ignoreCleanup, err := writeEmptyFile("goldfinger-ghorgignore-*")
+	ignoreFile, ignoreCleanup, err := writeEmptyFile("trailboss-ghorgignore-*")
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func buildArgs(s models.Selection, namesFile, ignoreFile string, opts Options) [
 		// is deterministic, and --preserve-scm-hostname=false stops ghorg nesting
 		// clones under a <hostname>/ subdir. A ghorg CLI flag overrides both the
 		// matching env var and a ghorg config file, so together with the env scrub
-		// the host cannot move the clones out from under the path goldfinger prints,
+		// the host cannot move the clones out from under the path trailboss prints,
 		// the mirror report, and the post-mirror reconciliation count.
 		"--output-dir=" + s.Owner,
 		"--preserve-scm-hostname=false",
@@ -172,7 +172,7 @@ func cloneType(ownerType string) string {
 // writeNamesFile writes the repo names (basenames — ghorg matches on name) to a
 // temp file for --target-repos-path, returning a cleanup func.
 func writeNamesFile(repos []models.Repo) (path string, cleanup func(), err error) {
-	f, err := os.CreateTemp("", "goldfinger-mirror-*.txt")
+	f, err := os.CreateTemp("", "trailboss-mirror-*.txt")
 	if err != nil {
 		return "", nil, fmt.Errorf("create names file: %w", err)
 	}

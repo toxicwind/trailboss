@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/redscaresu/goldfinger/models"
+	"github.com/toxicwind/trailboss/models"
 )
 
 // validateTargeting enforces the repo-selection rules: an org is required, and
