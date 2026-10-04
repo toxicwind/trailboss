@@ -149,7 +149,7 @@ func Direct(ctx context.Context, run Runner, s models.Selection, spec models.App
 		}
 		workDir = tmp
 		cleanupWorkDir = func() { _ = os.RemoveAll(tmp) }
-	} else if err := os.MkdirAll(workDir, 0o755); err != nil {
+	} else if err := os.MkdirAll(workDir, 0o750); err != nil {
 		return DirectResult{}, fmt.Errorf("create direct workdir %s: %w", workDir, err)
 	}
 	defer cleanupWorkDir()

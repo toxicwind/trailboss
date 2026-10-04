@@ -93,6 +93,7 @@ type MergeResult struct {
 
 // runGit runs a git command in dir and returns stdout.
 func runGit(dir string, args ...string) (string, error) {
+	// #nosec G204 -- args are constructed internally from validated git subcommands, not user input
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
@@ -137,8 +138,12 @@ func Divergence(f Fork) (behind, ahead int, err error) {
 	if err != nil {
 		return 0, 0, err
 	}
-	fmt.Sscanf(behindStr, "%d", &behind)
-	fmt.Sscanf(aheadStr, "%d", &ahead)
+	if _, err := fmt.Sscanf(behindStr, "%d", &behind); err != nil {
+		return 0, 0, fmt.Errorf("parse behind %q: %w", behindStr, err)
+	}
+	if _, err := fmt.Sscanf(aheadStr, "%d", &ahead); err != nil {
+		return 0, 0, fmt.Errorf("parse ahead %q: %w", aheadStr, err)
+	}
 	return behind, ahead, nil
 }
 
@@ -248,6 +253,7 @@ func Merge(f Fork, dryRun bool) (*MergeResult, error) {
 
 	// Run tests
 	if len(f.TestCmd) > 0 {
+		// #nosec G204 -- TestCmd is an explicit user-configured command from the trailboss config file
 		testCmd := exec.Command(f.TestCmd[0], f.TestCmd[1:]...)
 		testCmd.Dir = dir
 		testOut, testErr := testCmd.CombinedOutput()

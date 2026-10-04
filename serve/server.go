@@ -47,7 +47,7 @@ func Run(ctx context.Context, opts Options) error {
 	srv := &http.Server{Addr: opts.Addr, Handler: mux, ReadHeaderTimeout: 10 * time.Second}
 	go func() {
 		<-ctx.Done()
-		shut, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		shut, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 		defer cancel()
 		_ = srv.Shutdown(shut)
 	}()
