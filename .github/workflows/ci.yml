@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
+  workflow_dispatch:
 
 # Least-privilege default for every job. Only the coverage job overrides this
 # (contents: write) to publish its badge to the `badges` branch.
