@@ -64,7 +64,7 @@ func Watch(forks []Fork, dryRun bool) (*WatchResult, error) {
 // FormatFleetReport renders a watch result as a squawk-friendly message.
 func FormatFleetReport(wr *WatchResult) string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("🐂 Trailboss upstream watch — %s\n\n", wr.At.Format("2006-01-02 15:04 MST")))
+	fmt.Fprintf(&b, "🐂 Trailboss upstream watch — %s\n\n", wr.At.Format("2006-01-02 15:04 MST"))
 
 	ready := 0
 	conflicted := 0
@@ -80,7 +80,7 @@ func FormatFleetReport(wr *WatchResult) string {
 		}
 	}
 
-	b.WriteString(fmt.Sprintf("Ready for approval: %d | Needs human eyes: %d | Up to date: %d\n\n", ready, conflicted, uptodate))
+	fmt.Fprintf(&b, "Ready for approval: %d | Needs human eyes: %d | Up to date: %d\n\n", ready, conflicted, uptodate)
 	b.WriteString(wr.Summary)
 	return b.String()
 }

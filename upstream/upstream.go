@@ -289,7 +289,7 @@ func StateDir() string {
 // LoadState loads the persisted state for a fork.
 func LoadState(forkName string) (*ForkState, error) {
 	path := filepath.Join(StateDir(), forkName+".json")
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G304: path is StateDir()+sanitized fork name, not user input
 	if os.IsNotExist(err) {
 		return &ForkState{}, nil
 	}
@@ -308,7 +308,7 @@ func LoadState(forkName string) (*ForkState, error) {
 // SaveState persists the state for a fork.
 func SaveState(forkName string, s *ForkState) error {
 	dir := StateDir()
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil {
 		return err
 	}
 	s.LastChecked = time.Now()
@@ -316,5 +316,5 @@ func SaveState(forkName string, s *ForkState) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(dir, forkName+".json"), data, 0644)
+	return os.WriteFile(filepath.Join(dir, forkName+".json"), data, 0600)
 }
